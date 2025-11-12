@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # ------------------------------------
+  # 1. Database Service (MySQL)
+  # ------------------------------------
+  db:
+    image: mysql:8.0
+    container_name: auto88_mysql
+    environment:
+      MYSQL_DATABASE: car_sales_db 
+      MYSQL_ROOT_PASSWORD: Auto88SecurePwd # <-- Mật khẩu chính thức
+      # Đã bỏ MYSQL_USER/MYSQL_PASSWORD
+    ports:
+      - "3306:3306"
+    volumes:
+    # Ánh xạ khởi tạo database
+      - ./init-db:/docker-entrypoint-initdb.d
+      - db_data:/var/lib/mysql
+    hostname: db
+    
+    healthcheck: # <-- THÊM HEALTHCHECK: Đảm bảo DB sẵn sàng
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 5s
+    restart: always
+
+  # ------------------------------------
+  # 2. Backend Service (Spring Boot/Java 17)
+  # ------------------------------------
+  backend:
+    build:
+      context: ./oto-shop 
+      dockerfile: Dockerfile.be
+    image: auto88-be:latest
+    container_name: auto88_be
+    ports:
+      - "8080:8080"
+    environment:
+      # 🔑 CHUỖI JDBC ĐÃ SỬA: Khắc phục lỗi Public Key Retrieval
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/car_sales_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Auto88SecurePwd # <-- Phải khớp với mật khẩu DB
+      
+      # CẤU HÌNH KHÁC
+      JWT_SECRET: HCUzp+KbjzGwPpBYKLChUvu9WUc+D9b3kAvq1cDi45jkVKzf+EF9bpIeq42e0KFSm7Lqm2i93YLmi4qQ9lW5g== 
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+      SERVER_SERVLET_CONTEXT_PATH: /carshop
+
+    # 🎯 Ánh xạ thư mục Uploads cho Backend
+    volumes:
+      # [Host Path]:[Container Path]
+      - ./oto-shop/uploads:/app/uploads
+    # depends_on được cập nhật để chờ healthcheck thành công
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+
+  # ------------------------------------
+  # 3. Frontend Service (React/Nginx)
+  # ------------------------------------
+  frontend:
+    build:
+      context: ./Auto88_Fontend 
+      dockerfile: Dockerfile
+    image: auto88-fe:latest
+    container_name: auto88_fe
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  db_data:

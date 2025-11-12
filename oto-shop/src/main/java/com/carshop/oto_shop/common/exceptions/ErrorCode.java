@@ -1,0 +1,51 @@
+package com.carshop.oto_shop.common.exceptions;
+
+import org.springframework.http.HttpStatus;
+
+public enum ErrorCode {
+    ACCOUNT_NOT_FOUND("ACCOUNT_NOT_FOUND", "Tài khoản không tồn tại!", HttpStatus.NOT_FOUND),
+    ACCOUNT_BANNED("ACCOUNT_BANNED", "Tài khoản của bạn đã bị cấm!", HttpStatus.FORBIDDEN),
+    ACCOUNT_INACTIVE("ACCOUNT_INACTIVE", "Tài khoản của bạn chưa được kích hoạt! Liên hệ ngay đến Admin để được kích hoạt.", HttpStatus.FORBIDDEN),
+    USER_NOT_FOUND("USER_NOT_FOUND","Người dùng không tồn tại!", HttpStatus.NOT_FOUND),
+    CARCATEGORY_NOT_FOUND("CARCATEGORY_NOT_FOUND", "Danh mục không còn tồn tại!", HttpStatus.NOT_FOUND),
+    CAR_NOT_FOUND("CARCATE_NOT_FOUND", "Sản phẩm không còn tồn tại!", HttpStatus.NOT_FOUND),
+    CARBRAND_NOT_FOUND("CARBRAND_NOT_FOUND", "Thương hiệu không còn tồn tại!", HttpStatus.NOT_FOUND),
+    CAR_DETAIL_NOT_FOUND("CAR_DETAIL_NOT_FOUND", "Thông tin chi tiết này không còn tồn tại!", HttpStatus.NOT_FOUND),
+    FILE_NOT_FOUND("FILE_NOT_FOUND","File không tồn tại!", HttpStatus.NOT_FOUND),
+    INTERNAL_SERVER_ERROR("INTERNAL_SERVER_ERROR", "Lỗi máy chủ!", HttpStatus.INTERNAL_SERVER_ERROR),
+    FILE_UPLOAD_ERROR("FILE_UPLOAD_ERROR", "Lỗi khi upload file!", HttpStatus.INTERNAL_SERVER_ERROR),
+    FILE_SIZE_EXCEEDED("FILE_SIZE_EXCEEDED", "Kích thước vượt quá giới hạn cho phép!", HttpStatus.PAYLOAD_TOO_LARGE),
+    UNSUPPORTED_MEDIA_TYPE("UNSUPPORTED_MEDIA_TYPE", "Định dạng dữ liệu không được hỗ trợ!", HttpStatus.UNSUPPORTED_MEDIA_TYPE),
+    DUPLICATE_KEY("DUPLICATE_KEY","Trùng lặp dữ liệu!",HttpStatus.CONFLICT),
+    UNKNOWN("UNKNOWN_ERROR", "Lỗi không xác định!", HttpStatus.INTERNAL_SERVER_ERROR),
+    BAD_REQUEST("BAD_REQUEST", "Dữ liệu đầu vào không hợp lệ!", HttpStatus.BAD_REQUEST),
+    METHOD_NOT_ALLOWED("METHOD_NOT_ALLOWED", "Phương thức HTTP không được hỗ trợ!", HttpStatus.METHOD_NOT_ALLOWED),
+    INVALID_OR_EXPIRED_REFRESH_TOKEN("INVALID_OR_EXPIRED_REFRESH_TOKEN", "Refresh token không hợp lệ hoặc đã hết hạn", HttpStatus.UNAUTHORIZED),
+    ORDER_NOT_FOUND("ORDER_NOT_FOUND", "Đơn hàng không tồn tại!", HttpStatus.NOT_FOUND),
+    ORDER_DETAIL_NOT_FOUND("ORDER_DETAIL_NOT_FOUND", "Chi tiết đơn hàng không tồn tại!", HttpStatus.NOT_FOUND),
+    ORDER_CANNOT_BE_CANCELLED("ORDER_CANNOT_BE_CANCELLED", "Đơn hàng không thể hủy!", HttpStatus.BAD_REQUEST),
+    NEWS_NOT_FOUND("NEWS_NOT_FOUND", "Tin tức không tồn tại!", HttpStatus.NOT_FOUND),
+    PROMOTION_NOT_FOUND("PROMOTION_NOT_FOUND", "Khuyến mãi không tồn tại!", HttpStatus.NOT_FOUND),
+    PAYMENT_NOT_FOUND("PAYMENT_NOT_FOUND", "Thanh toán không tồn tại!", HttpStatus.NOT_FOUND),
+    VALIDATION_FAILED("VALIDATION_FAILED", "Dữ liệu nhập không hợp lệ", HttpStatus.BAD_REQUEST);
+    private final String code;
+    private final String message;
+    private final HttpStatus httpStatus;
+    ErrorCode(String code, String message, HttpStatus httpStatus) {
+        this.code = code;
+        this.message = message;
+        this.httpStatus = httpStatus;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public HttpStatus getHttpStatus() {
+        return httpStatus;
+    }
+}
