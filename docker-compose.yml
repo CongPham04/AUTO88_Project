@@ -75,3 +75,5 @@ services:
 
 volumes:
   db_data:
+  # chạy lệnh
+  # docker-compose up -d --build để khởi động lại toàn bộ dịch vụ với các thay đổi mới nhất
