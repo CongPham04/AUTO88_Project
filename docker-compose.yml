@@ -77,3 +77,35 @@ volumes:
   db_data:
   # chạy lệnh
   # docker-compose up -d --build để khởi động lại toàn bộ dịch vụ với các thay đổi mới nhất
+  # docker-compose down để dừng và xóa các container, mạng và volume được tạo bởi docker-compose up
+  # docker-compose ps để kiểm tra trạng thái các dịch vụ
+  # docker-compose logs [service_name] để xem log của một dịch vụ cụ thể
+  # docker-compose logs -f [service_name] để theo dõi log thời gian thực của một dịch vụ cụ thể
+  # docker-compose restart [service_name] để khởi động lại một dịch vụ cụ thể
+  # docker-compose exec [service_name] /bin/bash để truy cập vào shell của một dịch vụ cụ thể
+  # docker-compose down -v để dừng và xóa các container, mạng và volume được tạo bởi docker-compose up
+  # docker-compose build để xây dựng hoặc tái xây dựng các dịch vụ
+  # docker-compose pull để kéo các hình ảnh mới nhất cho các dịch vụ được định nghĩa trong tệp docker-compose.yml
+  # docker-compose rm để xóa các container đã dừng
+  # docker-compose config để kiểm tra và hiển thị cấu hình hợp lệ được tạo từ tệp docker-compose.yml
+  # docker-compose top để hiển thị các quy trình đang chạy bên trong các container của dịch vụ
+  # docker-compose scale [service_name]=[number] để thay đổi số lượng container chạy cho một dịch vụ cụ thể
+  # docker-compose version để kiểm tra phiên bản của Docker Compose được cài đặt trên hệ thống
+  # docker-compose help để hiển thị hướng dẫn sử dụng và các lệnh có sẵn trong Docker Compose
+  # docker-compose logs --tail=100 [service_name] để xem 100 dòng log cuối cùng của một dịch vụ cụ thể
+  # docker-compose pause [service_name] để tạm dừng một dịch vụ cụ thể
+  # docker-compose unpause [service_name] để tiếp tục một dịch vụ cụ thể đã bị tạm dừng
+  # docker-compose top [service_name] để hiển thị các quy trình đang chạy bên trong các container của một dịch vụ cụ thể
+  # docker-compose exec [service_name] env để xem các biến môi trường bên trong một dịch vụ cụ thể
+  # docker-compose logs --follow [service_name] để theo dõi log thời gian thực của một dịch vụ cụ thể
+  # docker-compose run [service_name] [command] để chạy một lệnh tạm thời trong một dịch vụ cụ thể
+  # docker-compose config --services để liệt kê tất cả các dịch vụ được định nghĩa trong tệp docker-compose.yml
+  # docker-compose config --volumes để liệt kê tất cả các volume được định nghĩa trong tệp docker-compose.yml
+  # docker-compose config --networks để liệt kê tất cả các mạng được định nghĩa trong tệp docker-compose.yml
+  # docker-compose logs --since="2024-01-01T00:00:00" [service_name] để xem log của một dịch vụ cụ thể kể từ một thời điểm nhất định
+  # docker-compose logs --until="2024-01-02T00:00:00" [service_name] để xem log của một dịch vụ cụ thể cho đến một thời điểm nhất định
+  # docker-compose build --no-cache để xây dựng lại các dịch vụ mà không sử dụng bộ nhớ đệm
+  # docker-compose up -d --force-recreate để tái tạo lại các container ngay cả khi không có thay đổi nào trong cấu hình
+  # docker-compose down --rmi all để dừng và xóa các container, mạng và xóa tất cả các hình ảnh được tạo bởi docker-compose up
+  # docker-compose down --volumes để dừng và xóa các container, mạng và volume được tạo bởi docker-compose up
+  # docker compose up --build --force-recreate -d để xây dựng lại và tái tạo các container trong chế độ nền

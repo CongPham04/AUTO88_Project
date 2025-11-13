@@ -49,7 +49,14 @@ export default function FeaturedCars({ cars, onViewDetails, isLoading }: Feature
   const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
   const handleAddToCompare = (id: number) => {
-    // ... logic
+    const success = addToCompare(id);
+    if (success) {
+      toast.success('Đã thêm xe vào danh sách so sánh');
+    } else if (compareList.includes(id)) {
+      toast.info('Xe này đã có trong danh sách so sánh');
+    } else {
+      toast.error('Chỉ có thể so sánh tối đa 3 xe');
+    }
   };
 
   return (
