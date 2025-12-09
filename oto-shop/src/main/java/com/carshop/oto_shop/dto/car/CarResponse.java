@@ -1,11 +1,15 @@
 package com.carshop.oto_shop.dto.car;
 
+import com.carshop.oto_shop.dto.cardetail.CarDetailResponse;
 import com.carshop.oto_shop.enums.Brand;
 import com.carshop.oto_shop.enums.CarStatus;
 import com.carshop.oto_shop.enums.Category;
+import com.carshop.oto_shop.enums.Color;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Set;
 
 public class CarResponse {
     private Long carId;
@@ -20,15 +24,32 @@ public class CarResponse {
 
     private BigDecimal price;
 
-    private String color;
-
     private String description;
-
+    private Integer quantity;
+    private Integer soldQuantity;
+    private Set<Color> colors;
+    // ✅ Đã bổ sung trường status
     private CarStatus status;
-
-    private String imageUrl;
+    private List<String> imageUrls; // Trả về list link ảnh
+    private CarDetailResponse detail; // Trả về luôn chi tiết xe
 
     public CarResponse() {}
+
+    public CarResponse(Long carId, Brand brand, Category category, String model, Integer manufactureYear, BigDecimal price, String description, Integer quantity, Integer soldQuantity, Set<Color> colors, CarStatus status, List<String> imageUrls, CarDetailResponse detail) {
+        this.carId = carId;
+        this.brand = brand;
+        this.category = category;
+        this.model = model;
+        this.manufactureYear = manufactureYear;
+        this.price = price;
+        this.description = description;
+        this.quantity = quantity;
+        this.soldQuantity = soldQuantity;
+        this.colors = colors;
+        this.status = status;
+        this.imageUrls = imageUrls;
+        this.detail = detail;
+    }
 
     public Long getCarId() {
         return carId;
@@ -78,20 +99,36 @@ public class CarResponse {
         this.price = price;
     }
 
-    public String getColor() {
-        return color;
-    }
-
-    public void setColor(String color) {
-        this.color = color;
-    }
-
     public String getDescription() {
         return description;
     }
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public Integer getSoldQuantity() {
+        return soldQuantity;
+    }
+
+    public void setSoldQuantity(Integer soldQuantity) {
+        this.soldQuantity = soldQuantity;
+    }
+
+    public Set<Color> getColors() {
+        return colors;
+    }
+
+    public void setColors(Set<Color> colors) {
+        this.colors = colors;
     }
 
     public CarStatus getStatus() {
@@ -102,11 +139,19 @@ public class CarResponse {
         this.status = status;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
+    public List<String> getImageUrls() {
+        return imageUrls;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setImageUrls(List<String> imageUrls) {
+        this.imageUrls = imageUrls;
+    }
+
+    public CarDetailResponse getDetail() {
+        return detail;
+    }
+
+    public void setDetail(CarDetailResponse detail) {
+        this.detail = detail;
     }
 }

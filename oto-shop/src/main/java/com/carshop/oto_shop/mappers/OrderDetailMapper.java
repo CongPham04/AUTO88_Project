@@ -17,5 +17,6 @@ public interface OrderDetailMapper {
     @Mapping(source = "car.carId", target = "carId")
     @Mapping(source = "car.model", target = "carModel")
     @Mapping(target = "subtotal", expression = "java(orderDetail.getPrice().multiply(java.math.BigDecimal.valueOf(orderDetail.getQuantity())))")
+    @Mapping(source = "colorName", target = "colorName") // ✅ Map colorName
     OrderDetailResponse toOrderDetailResponse(OrderDetail orderDetail);
 }

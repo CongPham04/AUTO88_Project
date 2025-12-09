@@ -49,11 +49,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Validate token
                 boolean valid = jwtTokenProvider.validateToken(token);
                 if (valid) {
-                    String username = jwtTokenProvider.getUsernameFromToken(token);
+                    String email = jwtTokenProvider.getEmailFromToken(token);
 
                     // Nếu chưa có Authentication trong context thì load user và set
-                    if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
                         UsernamePasswordAuthenticationToken authentication =
                                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

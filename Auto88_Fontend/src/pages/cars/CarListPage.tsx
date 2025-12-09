@@ -314,10 +314,10 @@ export default function CarListPage() {
     searchParams.has('color');
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header - (Tĩnh, giữ nguyên) */}
-        <div className="mb-8">
+        <div className="mb-3">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Danh sách xe ô tô</h1>
           
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
@@ -530,7 +530,7 @@ export default function CarListPage() {
                   {paginatedCars.map((car) => (
                     <CarCard
                       key={car.carId}
-                      car={car}
+                      car={car as any} // Ép kiểu tạm thời
                       onViewDetails={(id: number) => navigate(`/cars/${id}`)}
                       onAddToCompare={handleAddToCompare}
                       isInCompareList={compareList.includes(car.carId)}
@@ -542,8 +542,8 @@ export default function CarListPage() {
                 {/* Dùng INLINE STYLE để ép nhận khoảng cách */}
                 {totalPages > 1 && (
                   <div 
-                    className="flex justify-center" 
-                    style={{ marginTop: '6rem' }} /* 6rem = 96px */
+                    className="flex justify-center mt-16 " 
+                    style={{ marginTop: '2rem' }} /* 6rem = 96px */
                   >
                     <Pagination>
                       <PaginationContent>

@@ -1,401 +1,137 @@
-// import { Eye, GitCompare, Heart, Star } from 'lucide-react';
-// import { Button } from './ui/button';
-// import { Badge } from './ui/badge';
-// import { Card, CardContent } from './ui/card';
-// import { ImageWithFallback } from './figma/ImageWithFallback';
+import { CarResponse, Color, CarStatus } from '@/services/carService'; // Import từ service chuẩn
+import { Heart, RefreshCw, ShoppingCart, Eye, TrendingUp, GitCompare } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 
-// interface Car {
-//   id: number;
-//   make: string;
-//   model: string;
-//   year: number;
-//   price: number;
-//   originalPrice?: number;
-//   image: string;
-//   condition: string;
-//   promotion?: string;
-//   inStock: boolean;
-//   stockCount: number;
-//   mileage?: number;
-//   fuelType: string;
-//   transmission: string;
-// }
-
-// interface CarCardProps {
-//   car: Car;
-//   onViewDetails: (carId: number) => void;
-//   onAddToCompare: (carId: number) => void;
-//   isInCompareList?: boolean;
-//   viewMode?: 'grid' | 'list';
-// }
-
-// export function CarCard({ 
-//   car, 
-//   onViewDetails, 
-//   onAddToCompare, 
-//   isInCompareList = false,
-//   viewMode = 'grid' 
-// }: CarCardProps) {
-//   const formatPrice = (price: number) => {
-//     return new Intl.NumberFormat('vi-VN', {
-//       style: 'currency',
-//       currency: 'VND'
-//     }).format(price);
-//   };
-
-//   const formatMileage = (mileage: number) => {
-//     return new Intl.NumberFormat('vi-VN').format(mileage) + ' km';
-//   };
-
-//   if (viewMode === 'list') {
-//     return (
-//       <Card className="group hover:shadow-lg transition-all duration-300">
-//         <CardContent className="p-0">
-//           <div className="flex">
-//             <div className="relative w-72 h-48 overflow-hidden">
-//               <ImageWithFallback
-//                 src={car.image}
-//                 alt={`${car.make} ${car.model}`}
-//                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-//               />
-              
-//               {/* Badges */}
-//               <div className="absolute top-3 left-3 space-y-2">
-//                 {car.condition === 'Mới' && (
-//                   <Badge className="bg-green-600">Mới</Badge>
-//                 )}
-//                 {car.promotion && (
-//                   <Badge variant="destructive">Khuyến mãi</Badge>
-//                 )}
-//                 {!car.inStock && (
-//                   <Badge variant="secondary">Hết hàng</Badge>
-//                 )}
-//               </div>
-//             </div>
-
-//             <div className="flex-1 p-6">
-//               <div className="flex justify-between">
-//                 <div className="flex-1">
-//                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
-//                     {car.make} {car.model} {car.year}
-//                   </h3>
-                  
-//                   {car.promotion && (
-//                     <p className="text-sm text-red-600 mb-3">{car.promotion}</p>
-//                   )}
-
-//                   <div className="grid grid-cols-2 gap-4 mb-4 text-sm text-gray-600">
-//                     <div>Năm: {car.year}</div>
-//                     <div>Hộp số: {car.transmission}</div>
-//                     <div>Nhiên liệu: {car.fuelType}</div>
-//                     {car.mileage !== undefined && <div>Km: {formatMileage(car.mileage)}</div>}
-//                   </div>
-
-//                   <div className="flex items-center gap-4">
-//                     <div>
-//                       <div className="text-2xl font-bold text-red-600">
-//                         {formatPrice(car.price)}
-//                       </div>
-//                       {car.originalPrice && (
-//                         <div className="text-sm text-gray-500 line-through">
-//                           {formatPrice(car.originalPrice)}
-//                         </div>
-//                       )}
-//                     </div>
-//                   </div>
-//                 </div>
-
-//                 <div className="flex flex-col gap-2 ml-6">
-//                   <Button
-//                     size="sm"
-//                     variant="outline"
-//                     onClick={() => onAddToCompare(car.id)}
-//                     disabled={isInCompareList}
-//                     className="w-12 h-12 p-0"
-//                   >
-//                     <GitCompare className="w-4 h-4" />
-//                   </Button>
-                  
-//                   <Button 
-//                     onClick={() => onViewDetails(car.id)}
-//                     size="sm"
-//                     className="w-12 h-12 p-0"
-//                   >
-//                     <Eye className="w-4 h-4" />
-//                   </Button>
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-//         </CardContent>
-//       </Card>
-//     );
-//   }
-
-//   return (
-//     <Card className="group hover:shadow-lg transition-all duration-300">
-//       <CardContent className="p-0">
-//         <div className="relative overflow-hidden rounded-t-lg">
-//           <ImageWithFallback
-//             src={car.image}
-//             alt={`${car.make} ${car.model}`}
-//             className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-//           />
-          
-//           {/* Badges */}
-//           <div className="absolute top-3 left-3 space-y-2">
-//             {car.condition === 'Mới' && (
-//               <Badge className="bg-green-600">Mới</Badge>
-//             )}
-//             {car.promotion && (
-//               <Badge variant="destructive">Khuyến mãi</Badge>
-//             )}
-//             {!car.inStock && (
-//               <Badge variant="secondary">Hết hàng</Badge>
-//             )}
-//           </div>
-
-//           {/* Action buttons */}
-//           <div className="absolute top-3 right-3 space-y-2 opacity-0 group-hover:opacity-100 transition-opacity">
-//             <Button
-//               size="sm"
-//               variant="secondary"
-//               onClick={() => onAddToCompare(car.id)}
-//               disabled={isInCompareList}
-//               className="w-10 h-10 p-0"
-//             >
-//               <GitCompare className="w-4 h-4" />
-//             </Button>
-//           </div>
-
-//           {/* Stock indicator */}
-//           {car.inStock && car.stockCount <= 3 && (
-//             <div className="absolute bottom-3 left-3">
-//               <Badge variant="outline" className="bg-white/90">
-//                 Chỉ còn {car.stockCount} xe
-//               </Badge>
-//             </div>
-//           )}
-//         </div>
-
-//         <div className="p-4">
-//           <h3 className="font-semibold text-lg text-gray-900 mb-2">
-//             {car.make} {car.model} {car.year}
-//           </h3>
-          
-//           {car.promotion && (
-//             <p className="text-sm text-red-600 mb-2">{car.promotion}</p>
-//           )}
-
-//           <div className="grid grid-cols-2 gap-2 mb-3 text-sm text-gray-600">
-//             <div>Năm: {car.year}</div>
-//             <div>Hộp số: {car.transmission}</div>
-//             <div>Nhiên liệu: {car.fuelType}</div>
-//             {car.mileage !== undefined && <div>Km: {formatMileage(car.mileage)}</div>}
-//           </div>
-
-//           <div className="flex items-center justify-between mb-4">
-//             <div>
-//               <div className="text-xl font-bold text-red-600">
-//                 {formatPrice(car.price)}
-//               </div>
-//               {car.originalPrice && (
-//                 <div className="text-sm text-gray-500 line-through">
-//                   {formatPrice(car.originalPrice)}
-//                 </div>
-//               )}
-//             </div>
-//           </div>
-
-//           <Button 
-//             onClick={() => onViewDetails(car.id)}
-//             className="w-full"
-//             size="sm"
-//           >
-//             <Eye className="w-4 h-4 mr-2" />
-//             Xem chi tiết
-//           </Button>
-//         </div>
-//       </CardContent>
-//     </Card>
-//   );
-// }
-
-import { Eye, GitCompare, Info } from 'lucide-react';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Card, CardContent } from './ui/card';
-import { ImageWithFallback } from './figma/ImageWithFallback';
-
-// ⚙️ Kiểu dữ liệu khớp với backend Java entity
-export interface Car {
-  carId: number;
-  brand: string;           // Enum Brand
-  model: string;
-  category: string;        // Enum Category
-  manufactureYear: number;
-  price: number;           // BigDecimal -> number
-  color: string;           // Enum Color
-  description?: string;
-  status: string;          // Enum CarStatus
-  imageUrl?: string;
-}
-
+// Interface Props sử dụng trực tiếp CarResponse
 interface CarCardProps {
-  car: Car;
-  onViewDetails: (carId: number) => void;
-  onAddToCompare: (carId: number) => void;
+  car: CarResponse; // Sử dụng CarResponse thay vì định nghĩa lại interface Car cục bộ
+  onViewDetails: (id: number) => void;
+  onAddToCompare: (id: number) => void;
   isInCompareList?: boolean;
   viewMode?: 'grid' | 'list';
 }
 
-export function CarCard({
-  car,
-  onViewDetails,
-  onAddToCompare,
-  isInCompareList = false,
-  viewMode = 'grid'
-}: CarCardProps) {
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
-  const imageUrl = car.imageUrl
-    ? car.imageUrl.startsWith('http')
-      ? car.imageUrl
-      : `/api/cars/image/${car.imageUrl}`
-    : '/placeholder.png';
+export function CarCard({ car, onViewDetails, onAddToCompare, isInCompareList = false, viewMode = 'grid' }: CarCardProps) {
 
-  // 🧱 View dạng danh sách
+  // Helper lấy ảnh đại diện an toàn
+  const displayImage = (car.imageUrls && car.imageUrls.length > 0) ? car.imageUrls[0] : (car.imageUrl || '');
+
+  // Helper lấy màu sắc hiển thị (chuyển Enum sang string hoặc lấy màu đầu tiên)
+  const displayColor = Array.isArray(car.colors) && car.colors.length > 0
+    ? car.colors.join(', ') // Hiển thị "RED, BLACK"
+    : (car.color || 'N/A');
+
   if (viewMode === 'list') {
     return (
-      <Card className="group hover:shadow-lg transition-all duration-300">
-        <CardContent className="p-0 flex">
-          <div className="relative w-72 h-48 overflow-hidden rounded-l-lg">
-            <ImageWithFallback
-              src={imageUrl}
-              alt={`${car.brand} ${car.model}`}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-
-            <div className="absolute top-3 left-3 space-y-2">
-              <Badge className={
-                car.status === 'AVAILABLE'
-                  ? 'bg-green-600'
-                  : car.status === 'SOLD'
-                  ? 'bg-gray-500'
-                  : 'bg-yellow-500'
-              }>
-                {car.status === 'AVAILABLE'
-                  ? 'Còn hàng'
-                  : car.status === 'SOLD'
-                  ? 'Đã bán'
-                  : 'Đang xử lý'}
-              </Badge>
+      <Card className="flex flex-col md:flex-row overflow-hidden hover:shadow-lg transition-shadow duration-300 border-none bg-white">
+        <div className="w-full md:w-1/3 relative h-full md:h-auto">
+          <ImageWithFallback
+            src={displayImage}
+            alt={car.model}
+            className="w-full h-full object-cover"
+          />
+          <Badge className={`absolute top-2 right-2 ${car.status === 'AVAILABLE' ? 'bg-green-600' : 'bg-red-600'}`}>
+            {car.status === 'AVAILABLE' ? 'Có sẵn' : 'Hết'}
+          </Badge>
+        </div>
+        <CardContent className="flex-2 p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">{car.brand} • {car.manufactureYear}</p>
+                <h3 className="text-xl font-bold text-gray-900 mt-1">{car.model}</h3>
+              </div>
+              <span className="text-lg font-bold text-red-600 bg-red-50 px-1 py-1 rounded-lg">
+                {formatPrice(car.price)}
+              </span>
             </div>
+
+            <div className="flex flex-wrap gap-2 mt-3 text-sm text-gray-600">
+              <span className="bg-gray-100 px-2 py-1 rounded">{car.category}</span>
+              <span className="bg-gray-100 px-2 py-1 rounded">Màu: {displayColor}</span>
+              {/* Nếu có detail có thể hiển thị thêm */}
+              {car.detail && <span className="bg-gray-100 px-2 py-1 rounded">{car.detail.transmission}</span>}
+              {/* ✅ THÊM SỐ LƯỢNG ĐÃ BÁN (LIST VIEW) */}
+              <span className="bg-orange-50 text-orange-700 px-2 py-1 rounded border border-orange-100 flex items-center gap-1">
+                <TrendingUp size={12} /> Đã bán: {car.soldQuantity}
+              </span>
+            </div>
+
+            <p className="mt-4 text-gray-600 line-clamp-2 text-sm">
+              {car.description || 'Chưa có mô tả.'}
+            </p>
           </div>
 
-          <div className="flex-1 p-6 flex flex-col justify-between">
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                {car.brand} {car.model}
-              </h3>
-              <p className="text-sm text-gray-500 mb-2">
-                {car.category} • Năm {car.manufactureYear}
-              </p>
-              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                {car.description || 'Không có mô tả'}
-              </p>
-              <div className="text-sm text-gray-700">
-                Màu: <span className="font-medium">{car.color}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-2xl font-bold text-red-600">
-                {formatPrice(car.price)}
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onAddToCompare(car.carId)}
-                  disabled={isInCompareList}
-                >
-                  <GitCompare className="w-4 h-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => onViewDetails(car.carId)}
-                >
-                  <Eye className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
+          <div className="flex gap-3 mt-6 pt-4 border-t">
+            <Button onClick={() => onViewDetails(car.carId)} className="flex-1 bg-black text-white hover:bg-gray-800">
+              Xem chi tiết
+            </Button>
+            <Button variant="outline" size="icon" onClick={() => onAddToCompare(car.carId)} className={isInCompareList ? "text-blue-600 border-blue-600 bg-blue-50" : ""}>
+              <GitCompare className="w-4 h-4" />
+            </Button>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  // 🧱 View dạng lưới (grid)
+  // Grid View (Mặc định)
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300">
-      <CardContent className="p-0">
-        <div className="relative overflow-hidden rounded-t-lg">
-          <ImageWithFallback
-            src={imageUrl}
-            alt={`${car.brand} ${car.model}`}
-            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-          <div className="absolute top-3 left-3">
-            <Badge className={
-              car.status === 'AVAILABLE'
-                ? 'bg-green-600'
-                : car.status === 'SOLD'
-                ? 'bg-gray-500'
-                : 'bg-yellow-500'
-            }>
-              {car.status === 'AVAILABLE'
-                ? 'Còn hàng'
-                : car.status === 'SOLD'
-                ? 'Đã bán'
-                : 'Đang xử lý'}
-            </Badge>
-          </div>
+    <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-none bg-white h-full flex flex-col">
+      <div className="relative aspect-[4/3] overflow-hidden">
+        <ImageWithFallback
+          src={displayImage}
+          alt={car.model}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+        />
+        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
+          <Button size="icon" variant="secondary" className="rounded-full shadow-lg" onClick={() => onViewDetails(car.carId)} title="Xem chi tiết">
+            <Eye className="w-4 h-4" />
+          </Button>
+          <Button size="icon" variant="secondary" className={`rounded-full shadow-lg ${isInCompareList ? 'text-blue-600 bg-blue-50' : ''}`} onClick={() => onAddToCompare(car.carId)} title="So sánh">
+            <GitCompare className="w-4 h-4" /> 
+          </Button>
+        </div>
+        <Badge className={`absolute top-3 left-3 ${car.status === 'AVAILABLE' ? 'bg-green-600' : 'bg-red-600'}`}>
+          {car.status === 'AVAILABLE' ? 'Có sẵn' : 'Hết'}
+        </Badge>
+      </div>
+
+      <CardContent className="p-4 flex-1 flex flex-col">
+        <div className="mb-2 flex justify-between items-start">
+          <span className="text-xs font-bold text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded">{car.brand}</span>
+          <span className="text-xs text-gray-500">{car.manufactureYear}</span>
         </div>
 
-        <div className="p-4">
-          <h3 className="font-semibold text-lg text-gray-900 mb-1">
-            {car.brand} {car.model}
-          </h3>
-          <p className="text-sm text-gray-500 mb-2">
-            {car.category} • {car.manufactureYear} • {car.color}
-          </p>
+        <h3 className="font-bold text-gray-900 text-lg mb-1 truncate" title={car.model}>{car.model}</h3>
 
-          <div className="text-xl font-bold text-red-600 mb-3">
-            {formatPrice(car.price)}
-          </div>
+        <div className="flex items-center gap-1 text-xs text-gray-500 mb-3">
+            <TrendingUp size={12} className="text-orange-500" />
+            <span>Đã bán: <span className="font-medium text-gray-700">{car.soldQuantity}</span></span>
+        </div>
 
-          <div className="flex gap-2">
-            <Button
-              onClick={() => onViewDetails(car.carId)}
-              size="sm"
-              className="flex-1"
-            >
-              <Info className="w-4 h-4 mr-2" /> Xem chi tiết
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onAddToCompare(car.carId)}
-              disabled={isInCompareList}
-            >
-              <GitCompare className="w-4 h-4" />
-            </Button>
+        <div className="mt-auto pt-3 flex items-center justify-between border-t border-gray-100">
+          <div className="flex flex-col">
+            <span className="text-xs text-gray-400 font-medium">Giá bán</span>
+            <span className="text-red-600 font-bold text-lg">{formatPrice(car.price)}</span>
           </div>
+          <Button variant="ghost" size="sm" className="text-xs hover:bg-gray-100" onClick={() => onViewDetails(car.carId)}>
+            Chi tiết <ArrowRight className="w-3 h-3 ml-1" />
+          </Button>
         </div>
       </CardContent>
     </Card>
   );
+}
+
+// Icon ArrowRight dùng tạm nếu chưa import
+function ArrowRight(props: any) {
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+  )
 }

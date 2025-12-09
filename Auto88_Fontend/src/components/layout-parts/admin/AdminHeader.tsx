@@ -3,14 +3,37 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
-import { useUserStore } from '@/store/userStore';
+import { useUserStore } from '@/store/useUserStore';
 import { adminMenu } from './menuConfig';
+
+// ✅ 1. Import các component cho AlertDialog
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function AdminHeader() {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useUserStore();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  // ✅ 2. State điều khiển hộp thoại đăng xuất
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
+
+  // ✅ 3. Hàm xử lý đăng xuất
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/'; // Chuyển về trang chủ
+    setIsUserMenuOpen(false);
+    setIsLogoutDialogOpen(false);
+  };
 
   return (
     <header className="bg-white shadow-sm border-b sticky top-0 z-50 w-full h-24">
@@ -30,27 +53,21 @@ export default function AdminHeader() {
           </div>
 
           {/* User actions */}
-          <div className="flex justify-between items-center h-full gap-x-4 pr-8"> {/* 👈 thêm padding phải để dịch vào trong */}
-            <button
-              // onClick={() => navigate('/admin/messages')}
-              className="relative hover:text-red-600 transition-colors mr-2 cursor-pointer"
-            >
+          <div className="flex justify-between items-center h-full gap-x-4 pr-8">
+            <button className="relative hover:text-red-600 transition-colors mr-2 cursor-pointer">
               <MessageSquare className="w-6 h-6 text-gray-700" />
               <span className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 bg-red-600 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
                 5
               </span>
             </button>
 
-            <button
-              //   onClick={() => navigate('/admin/notifications')}
-              className="relative hover:text-red-600 transition-colors ml-2 cursor-pointer "
-            >
+            <button className="relative hover:text-red-600 transition-colors ml-1 cursor-pointer ">
               <Bell className="w-6 h-6 text-gray-700" />
-              {/* Badge thông báo nhỏ */}
               <span className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 bg-red-600 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
                 3
               </span>
             </button>
+
             {isAuthenticated && user ? (
               <div
                 className="relative"
@@ -59,60 +76,59 @@ export default function AdminHeader() {
               >
                 <Button
                   variant="ghost"
-                  size="lg"
-                  className="hover:bg-gray-100 cursor-pointer transition-colors flex items-center"
+                  size="sm"
+                  className="hover:bg-gray-100 cursor-pointer transition-colors flex items-center gap-2 px-2 h-10"
                 >
-                  {user.avatar ? (
-                    //Nếu có avatar → hiển thị ảnh
+                  {user.avatarUrl ? (
                     <img
-                      src={user.avatar}
-                      alt={user.fullName || user.username}
-                      className="w-10 h-10 rounded-full object-cover"
+                      src={user.avatarUrl}
+                      alt={user.fullName || user.email}
+                      className="w-10 h-10 rounded-full object-cover border border-gray-200"
                     />
                   ) : (
-                    // Nếu không có avatar → hiển thị icon mặc định
                     <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                      <User className="w-6 h-6 text-red-600" />
+                      <User className="w-5 h-5 text-red-600" />
                     </div>
                   )}
 
                   <span className="ml-1 text-base sm:text-lg font-medium truncate max-w-[120px] sm:max-w-[180px]">
-                    {user.fullName || user.username}
+                    {user.fullName || user.email}
                   </span>
                 </Button>
 
                 {isUserMenuOpen && (
                   <div
-                    className="absolute left-4 top-[95%] w-full bg-white border border-gray-200 rounded-lg shadow-xl z-50"
+                    className="absolute right-0 top-full w-full bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1 animate-in fade-in zoom-in-95 duration-200"
                   >
-                    <div className="py-2">
-                      {/* <button
-                        onClick={() => {
-                          navigate('/admin/profile');
-                          setIsUserMenuOpen(false);
-                        }}
-                        className="block w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
-                      >
-                        <div className="flex items-center">
-                          <User className="w-5 h-5 inline mr-2" />
-                          <span>Tài khoản của tôi</span>
-                        </div>
-                      </button> */}
-
-                      <button
-                        onClick={() => {
-                          logout();
-                          window.location.href = '/';
-                          setIsUserMenuOpen(false);
-                        }}
-                        className="block w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 hover:text-red-700 cursor-pointer"
-                      >
-                        <div className="flex items-center">
-                          <LogOut className="w-5 h-5 inline mr-2" />
-                          <span>Đăng xuất</span>
-                        </div>
-                      </button>
+                    <div className="px-4 py-2 border-b bg-gray-50 md:hidden">
+                      <p className="text-xs font-semibold text-gray-500">Đăng nhập bởi</p>
+                      <p className="text-sm font-bold text-gray-900 truncate">{user.fullName || user.email}</p>
                     </div>
+
+                    <button
+                      onClick={() => {
+                        navigate('/admin/profile');
+                        setIsUserMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-3 mt-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 cursor-pointer transition-colors flex items-center gap-2"
+                    >
+                      <div className="flex items-center">
+                        <User className="w-4 h-4 mr-2" />
+                        <span>Tài khoản của tôi</span>
+                      </div>
+                    </button>
+
+                    <button
+                      // ✅ 4. Sửa nút đăng xuất: Mở dialog thay vì logout ngay
+                      onClick={() => {
+                        setIsUserMenuOpen(false); // Đóng menu dropdown trước
+                        setIsLogoutDialogOpen(true); // Mở dialog xác nhận
+                      }}
+                      className="w-full text-left px-4 py-3 mt-4 mb-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer transition-colors flex items-center gap-2"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        <span>Đăng xuất</span>
+                    </button>
                   </div>
                 )}
               </div>
@@ -163,6 +179,28 @@ export default function AdminHeader() {
           </div>
         </div>
       </div>
+
+      {/* ✅ 5. Hộp thoại xác nhận đăng xuất */}
+      <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận đăng xuất</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn đăng xuất khỏi hệ thống quản trị không?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleLogout} 
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Đăng xuất
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </header>
   );
 }

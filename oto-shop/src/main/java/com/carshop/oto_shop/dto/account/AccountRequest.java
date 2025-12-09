@@ -4,7 +4,6 @@ import com.carshop.oto_shop.enums.AccountStatus;
 import com.carshop.oto_shop.enums.Role;
 
 public class AccountRequest {
-    private String username;
 
     private String email;
 
@@ -13,14 +12,6 @@ public class AccountRequest {
     private Role role;
 
     private AccountStatus status;
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
     public String getEmail() {
         return email;

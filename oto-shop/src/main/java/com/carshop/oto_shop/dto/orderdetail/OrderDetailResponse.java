@@ -1,5 +1,7 @@
 package com.carshop.oto_shop.dto.orderdetail;
 
+import com.carshop.oto_shop.enums.Color;
+
 import java.math.BigDecimal;
 
 public class OrderDetailResponse {
@@ -10,7 +12,8 @@ public class OrderDetailResponse {
     private Integer quantity;
     private BigDecimal price;
     private BigDecimal subtotal;
-
+    // ✅ 1. Bổ sung trường colorName
+    private Color colorName;
     // Getters and Setters
     public Long getOrderDetailId() {
         return orderDetailId;
@@ -58,5 +61,13 @@ public class OrderDetailResponse {
 
     public void setSubtotal(BigDecimal subtotal) {
         this.subtotal = subtotal;
+    }
+
+    public Color getColorName() {
+        return colorName;
+    }
+
+    public void setColorName(Color colorName) {
+        this.colorName = colorName;
     }
 }

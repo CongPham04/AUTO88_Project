@@ -1,13 +1,32 @@
 import apiClient from '@/lib/apiClient';
+import { setTokens, clearTokens } from "@/lib/tokenHelper";
 
 export interface LoginRequest {
-  username: string;
+  email: string;
   password: string;
 }
 
 export interface SignupRequest {
-  username: string;
+  email: string;
   password: string;
+  fullName: string;
+}
+
+export interface VerifyRequest {
+  code: string;
+}
+
+export interface ResendOtpRequest {
+  email: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
 }
 
 export interface JwtResponse {
@@ -22,34 +41,54 @@ export interface ApiResponse<T> {
 }
 
 class AuthService {
-  async login(username: string, password: string): Promise<JwtResponse> {
+  // ✅ Login: Nhận thêm biến remember
+  async login(email: string, password: string, remember: boolean): Promise<JwtResponse> {
     const response = await apiClient.post<ApiResponse<JwtResponse>>(
       '/auth/login',
-      { username, password }
+      { email, password }
     );
 
     if (response.data.code === 200) {
       const { token, refreshToken } = response.data.data;
-      // Store tokens in localStorage
-      localStorage.setItem('token', token);
-      localStorage.setItem('refreshToken', refreshToken);
+      // ✅ Lưu token vào Local hoặc Session tùy ý người dùng
+      setTokens(token, refreshToken, remember); 
       return response.data.data;
     } else {
-      throw new Error(response.data.message || 'Login failed');
+      throw new Error(response.data.message || 'Đăng nhập thất bại');
     }
   }
 
-  async register(username: string, password: string, fullName: string): Promise<void> {
-  const response = await apiClient.post<ApiResponse<void>>(
-    '/auth/register',
-    { username, password, fullName }
-  );
-
-  if (response.data.code !== 200) {
-    throw new Error(response.data.message || 'Registration failed');
+  async register(email: string, password: string, fullName: string): Promise<void> {
+    const response = await apiClient.post<ApiResponse<void>>(
+      '/auth/register',
+      { email, password, fullName }
+    );
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message || 'Đăng ký thất bại');
+    }
   }
-}
 
+  async verifyAccount(code: string): Promise<void> {
+    const response = await apiClient.post<ApiResponse<void>>(
+      '/auth/verify',
+      { code }
+    );
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message || 'Xác thực thất bại');
+    }
+  }
+
+  async resendOtp(email: string): Promise<void> {
+    const response = await apiClient.post<ApiResponse<void>>(
+      '/auth/resend-otp',
+      { email }
+    );
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message || 'Gửi lại mã thất bại');
+    }
+  }
+
+  // Refresh token (client-side trigger manually if needed)
   async refresh(refreshToken: string): Promise<JwtResponse> {
     const response = await apiClient.post<ApiResponse<JwtResponse>>(
       '/auth/refresh',
@@ -58,18 +97,36 @@ class AuthService {
     );
 
     if (response.data.code === 200) {
-      const { token, refreshToken: newRefreshToken } = response.data.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('refreshToken', newRefreshToken);
+      // Lưu ý: Logic lưu token refresh này thường do interceptor tự lo
       return response.data.data;
     } else {
-      throw new Error(response.data.message || 'Token refresh failed');
+      throw new Error(response.data.message || 'Làm mới token thất bại');
     }
   }
 
   logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
+    clearTokens(); // ✅ Xóa sạch token ở cả 2 nơi
+    apiClient.post('/auth/logout').catch(() => {});
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const response = await apiClient.post<ApiResponse<void>>(
+      '/auth/forgot-password',
+      { email }
+    );
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message || 'Gửi email thất bại');
+    }
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const response = await apiClient.post<ApiResponse<void>>(
+      '/auth/reset-password',
+      { token, newPassword }
+    );
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message || 'Đặt lại mật khẩu thất bại');
+    }
   }
 }
 

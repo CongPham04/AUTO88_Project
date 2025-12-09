@@ -10,12 +10,12 @@ services:
     environment:
       MYSQL_DATABASE: car_sales_db 
       MYSQL_ROOT_PASSWORD: Auto88SecurePwd # <-- Mật khẩu chính thức
-      # Đã bỏ MYSQL_USER/MYSQL_PASSWORD
+    # Đã bỏ MYSQL_USER/MYSQL_PASSWORD
     ports:
       - "3306:3306"
     volumes:
-    # Ánh xạ khởi tạo database
-      - ./init-db:/docker-entrypoint-initdb.d
+      # Ánh xạ khởi tạo database
+      # - ./init-db:/docker-entrypoint-initdb.d
       - db_data:/var/lib/mysql
     hostname: db
     
@@ -38,6 +38,9 @@ services:
     ports:
       - "8080:8080"
     environment:
+      # === BỔ SUNG CẤU HÌNH EMAIL TẠI ĐÂY ===
+      MAIL_USERNAME: auto88.com.vn@gmail.com
+      MAIL_PASSWORD: ufdmjnkbkgcjpmjq 
       # 🔑 CHUỖI JDBC ĐÃ SỬA: Khắc phục lỗi Public Key Retrieval
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/car_sales_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
@@ -109,3 +112,6 @@ volumes:
   # docker-compose down --rmi all để dừng và xóa các container, mạng và xóa tất cả các hình ảnh được tạo bởi docker-compose up
   # docker-compose down --volumes để dừng và xóa các container, mạng và volume được tạo bởi docker-compose up
   # docker compose up --build --force-recreate -d để xây dựng lại và tái tạo các container trong chế độ nền
+  # stop các dịch vụ
+  # docker compose stop để dừng tất cả các dịch vụ đang chạy
+  

@@ -48,17 +48,18 @@ public class Order {
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;
 
-    // Financial breakdown
-    @Column(name = "subtotal", nullable = false, precision = 15, scale = 2)
+    // SỬA: Tăng precision lên 15 hoặc 20
+    @Column(name = "subtotal", nullable = false, precision = 20, scale = 2)
     private BigDecimal subtotal;
 
-    @Column(name = "shipping_fee", nullable = false, precision = 10, scale = 2)
+    @Column(name = "shipping_fee", nullable = false, precision = 20, scale = 2)
     private BigDecimal shippingFee;
 
-    @Column(name = "tax", nullable = false, precision = 10, scale = 2)
+    // SỬA LỖI CHÍNH Ở ĐÂY
+    @Column(name = "tax", nullable = false, precision = 20, scale = 2)
     private BigDecimal tax;
 
-    @Column(name = "total_amount", nullable = false, precision = 15, scale = 2)
+    @Column(name = "total_amount", nullable = false, precision = 20, scale = 2)
     private BigDecimal totalAmount;
 
     // Order tracking

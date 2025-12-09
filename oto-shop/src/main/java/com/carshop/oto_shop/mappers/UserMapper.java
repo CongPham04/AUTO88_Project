@@ -14,7 +14,6 @@ public interface UserMapper {
     // Map both User fields and Account fields (1:1 relationship)
     @Mapping(target = "avatarUrl", ignore = false)
     @Mapping(source = "account.accountId", target = "accountId")
-    @Mapping(source = "account.username", target = "username")
     @Mapping(source = "account.email", target = "email")
     @Mapping(source = "account.role", target = "role")
     @Mapping(source = "account.status", target = "status")

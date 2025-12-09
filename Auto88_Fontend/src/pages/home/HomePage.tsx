@@ -7,23 +7,12 @@ import FeaturedCars from '@/components/sections/FeaturedCars';
 import NewsSection from '@/components/sections/NewsSection';
 import homeService from '@/services/homeService';
 import { CarResponse } from '@/services/carService';
-import { News as NewsResponse } from '@/services/newsService';
+import newsService, { NewsResponse } from '@/services/newsService'; // ✅ Sửa import đúng Type và Service
 import { toast } from 'sonner'; 
 
-interface FeaturedCar {
-  id: number;
-  make: string;
-  model: string;
-  year: number;
-  price: number;
-  originalPrice?: number;
-  image: string;
-  condition: string;
-  promotion?: string;
-  inStock: boolean;
-  stockCount: number;
-}
-
+// Interface nội bộ cho NewsSection (nếu component con yêu cầu cấu trúc khác)
+// Tuy nhiên tốt nhất là nên refactor NewsSection để nhận NewsResponse luôn.
+// Ở đây mình sẽ map sang cấu trúc NewsSection đang dùng.
 interface NewsArticle {
   id: number;
   title: string;
@@ -35,7 +24,7 @@ interface NewsArticle {
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const [featuredCars, setFeaturedCars] = useState<FeaturedCar[]>([]);
+  const [featuredCars, setFeaturedCars] = useState<CarResponse[]>([]);
   const [latestNews, setLatestNews] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,33 +32,30 @@ export default function HomePage() {
     const fetchHomeData = async () => {
       try {
         setLoading(true);
-        const data = await homeService.getHomeSections();
+        
+        // Gọi song song 2 API: Home Data (cho xe) và News Public (cho tin tức)
+        const [homeData, newsData] = await Promise.all([
+             homeService.getHomeSections(),
+             newsService.getPublishedNews() // ✅ Gọi API Public lấy tin đã xuất bản
+        ]);
 
-        const mappedCars: FeaturedCar[] = (data.newArrivals || []).map((car: CarResponse) => ({
-          id: car.carId,
-          make: car.brand,
-          model: car.model,
-          year: car.manufactureYear,
-          price: car.price,
-          image: car.imageUrl,
-          condition: car.status === 'AVAILABLE' ? 'Mới' : 'Đã qua sử dụng',
-          inStock: car.status === 'AVAILABLE',
-          stockCount: car.status === 'AVAILABLE' ? 5 : 0, 
-        }));
+        // 1. Xử lý Xe nổi bật
+        const carsData = homeData.newArrivals || [];
+        setFeaturedCars(carsData.slice(0, 4));
 
-        const mappedNews: NewsArticle[] = (data.latestNews || []).map((news: NewsResponse) => ({
+        // 2. Xử lý Tin tức mới nhất
+        const mappedNews: NewsArticle[] = newsData.slice(0, 4).map((news: NewsResponse) => ({
           id: news.newsId,
           title: news.title,
           summary: news.excerpt,
-          image: news.coverImageUrl,
+          image: news.coverImageUrl || '', // Đã là full URL từ BE
           date: news.publishedAt || news.createdAt,
-          category: 'Tin tức',
+          category: 'Tin tức', // Mặc định
         }));
 
-        setFeaturedCars(mappedCars.slice(0, 4));
-        setLatestNews(mappedNews.slice(0, 2));
+        setLatestNews(mappedNews);
       } catch (err) {
-        toast.error('Không tải được dữ liệu trang chủ.');
+        // toast.error('Không tải được dữ liệu trang chủ.'); // Có thể bỏ qua lỗi này để không làm phiền user
         console.error(err);
       } finally {
         setLoading(false);
@@ -88,14 +74,10 @@ export default function HomePage() {
 
   return (
     <div>
-      {/* Component tĩnh, render ngay */}
       <HeroSection onSearch={handleSearch} />
-      
-      {/* Các component tự fetch, tự xử lý 3 state */}
       <CategorySection onCategoryClick={(category) => navigate(`/cars?category=${encodeURIComponent(category)}`)} />
       <BrandSection onBrandClick={(brand) => navigate(`/cars?brand=${encodeURIComponent(brand)}`)} />
       
-      {/* Truyền isLoading cho component con */}
       <FeaturedCars
         cars={featuredCars}
         isLoading={loading} 

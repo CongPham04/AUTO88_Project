@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+// ✅ Import hình ảnh logo
+import logo from '@/assets/images/auto88-removebg.png';
 
 export default function Footer() {
   const navigate = useNavigate();
@@ -12,9 +14,11 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center space-x-3 mb-6">
-              <div className="bg-red-600 p-2 rounded-lg">
-                <Car className="w-8 h-8 text-white" />
-              </div>
+              <img
+                src={logo}
+                alt="Auto88 Logo"
+                className="h-12 w-12" // Điều chỉnh kích thước tại đây
+              />
               <div>
                 <h1 className="text-2xl font-bold">AUTO 88</h1>
                 <p className="text-sm text-gray-400">Uy tín - Chất lượng - Giá tốt</p>
@@ -33,9 +37,8 @@ export default function Footer() {
             <ul className="space-y-3">
               <li><button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">Trang chủ</button></li>
               <li><button onClick={() => navigate('/cars')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">Xe ô tô</button></li>
-              <li><button onClick={() => navigate('/news')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">Tin tức</button></li>
+              <li><button onClick={() => navigate('/news')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">Tin tức và khuyến mãi</button></li>
               <li><button onClick={() => navigate('/comparison')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">So sánh xe</button></li>
-              <li><button onClick={() => navigate('/news')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">Khuyến mãi</button></li>
               <li><button onClick={() => navigate('/profile')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">Liên hệ</button></li>
             </ul>
           </div>
@@ -43,12 +46,9 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold text-lg mb-6">Danh mục xe</h3>
             <ul className="space-y-3">
-              <li><button onClick={() => navigate('/cars?category=Sedan')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">Sedan</button></li>
+              <li><button onClick={() => navigate('/cars?category=SEDAN')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">SEDAN</button></li>
               <li><button onClick={() => navigate('/cars?category=SUV')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">SUV</button></li>
-              <li><button onClick={() => navigate('/cars?category=Hatchback')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">Hatchback</button></li>
-              <li><button onClick={() => navigate('/cars?category=Pickup')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">Bán tải</button></li>
-              <li><button onClick={() => navigate('/cars?category=Electric')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">Xe điện</button></li>
-              <li><button onClick={() => navigate('/cars?category=Hybrid')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">Xe hybrid</button></li>
+              <li><button onClick={() => navigate('/cars?category=HATCHBACK')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">HATCHBACK</button></li>
             </ul>
           </div>
 

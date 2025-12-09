@@ -16,11 +16,6 @@ public class UserAccountRequest {
 
     // ==================== Account Fields ====================
 
-    @NotBlank(message = "Username không được để trống")
-    @Size(min = 3, max = 50, message = "Username phải có độ dài từ 3-50 ký tự")
-    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Username chỉ được chứa chữ cái, số và dấu gạch dưới")
-    private String username;
-
     @NotBlank(message = "Email không được để trống")
     @Email(message = "Email không hợp lệ")
     @Size(max = 100, message = "Email không được vượt quá 100 ký tự")
@@ -59,14 +54,6 @@ public class UserAccountRequest {
     }
 
     // ==================== Getters and Setters ====================
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
     public String getEmail() {
         return email;

@@ -5,9 +5,9 @@ interface AuthState {
   token: string | null;
   user: UserResponse | null;
   isUserFetched: boolean;
-  setAuth: (token: string | null, username?: string) => Promise<void>;
+  setAuth: (token: string | null, email?: string) => Promise<void>; // Thay username -> email
   logout: () => void;
-  fetchUser: (username: string) => Promise<void>;
+  fetchUser: (email: string) => Promise<void>; // Thay username -> email
 }
 
 const getToken = (): string | null => localStorage.getItem("token");
@@ -16,19 +16,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   token: getToken(),
   user: null,
   isUserFetched: false,
-  setAuth: async (token, username) => {
-    if (token && username) {
+  setAuth: async (token, email) => {
+    if (token && email) {
       localStorage.setItem("token", token);
       set({ token });
-      await get().fetchUser(username);
+      await get().fetchUser(email);
     } else {
       localStorage.removeItem("token");
       set({ token: null, user: null, isUserFetched: false });
     }
   },
-  fetchUser: async (username) => {
+  fetchUser: async (email) => {
     try {
-      const user = await userService.getUserByUsername(username);
+      // ✅ Gọi API getUserByEmail
+      const user = await userService.getUserByEmail(email);
       set({ user, isUserFetched: true });
     } catch (error) {
       console.error("Failed to fetch user:", error);
@@ -40,4 +41,3 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ token: null, user: null, isUserFetched: false });
   },
 }));
-

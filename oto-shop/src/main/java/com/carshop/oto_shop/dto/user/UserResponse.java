@@ -18,7 +18,6 @@ public class UserResponse {
 
     // Account information (1:1 relationship)
     private String accountId;
-    private String username;
     private String email;
     private Role role;
     private AccountStatus status;
@@ -86,14 +85,6 @@ public class UserResponse {
 
     public void setAccountId(String accountId) {
         this.accountId = accountId;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getEmail() {

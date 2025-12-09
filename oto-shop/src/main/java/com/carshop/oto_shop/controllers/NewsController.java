@@ -33,73 +33,71 @@ public class NewsController {
         this.newsService = newsService;
     }
 
-    // CREATE
-    @Operation(summary = "Create news", description = "Thêm bài viết mới (có ảnh upload)")
+    // ================= PUBLIC API (Khách xem tin tức) =================
+
+    @Operation(summary = "Get all published news", description = "API Public: Lấy danh sách tin tức đã xuất bản")
+    @GetMapping("/published") // URL: /api/news/published
+    public ResponseEntity<ApiResponse<List<NewsResponseDto>>> getAllPublishedNews() {
+        List<NewsResponseDto> list = newsService.getAllPublishedNews();
+        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tin tức thành công!", list));
+    }
+
+    @Operation(summary = "Get published news detail", description = "API Public: Xem chi tiết tin tức đã xuất bản")
+    @GetMapping("/published/{id}") // URL: /api/news/published/{id}
+    public ResponseEntity<ApiResponse<NewsResponseDto>> getPublishedNewsById(@PathVariable Long id) {
+        NewsResponseDto dto = newsService.getPublishedNewsById(id);
+        return ResponseEntity.ok(ApiResponse.success("Lấy tin tức thành công!", dto));
+    }
+
+    // ================= ADMIN API (Quản trị viên) =================
+
+    @Operation(summary = "Get all news (Admin)", description = "API Admin: Lấy tất cả tin tức (kể cả Draft)")
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<NewsResponseDto>>> getAllNewsAdmin() {
+        // Hàm này dành cho trang quản trị
+        return ResponseEntity.ok(ApiResponse.success("Lấy toàn bộ tin tức thành công!", newsService.getAllNews()));
+    }
+
+    @Operation(summary = "Get news detail (Admin)", description = "API Admin: Xem chi tiết tin tức bất kỳ")
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<NewsResponseDto>> getNewsByIdAdmin(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("Lấy tin tức thành công!", newsService.getNewsById(id)));
+    }
+
+    @Operation(summary = "Create news", description = "Admin: Thêm bài viết mới")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<NewsResponseDto>> createNews(@Valid @ModelAttribute NewsRequestDto dto) {
-        NewsResponseDto created = newsService.createNews(dto);
-        return ResponseEntity.ok(ApiResponse.success("Tạo bài viết thành công!", created));
+        return ResponseEntity.ok(ApiResponse.success("Tạo bài viết thành công!", newsService.createNews(dto)));
     }
 
-    // UPDATE
-    @Operation(summary = "Update news", description = "Cập nhật bài viết (có thể kèm ảnh mới)")
+    @Operation(summary = "Update news", description = "Admin: Cập nhật bài viết")
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<NewsResponseDto>> updateNews(
-            @PathVariable Long id,
-            @Valid @ModelAttribute NewsRequestDto dto) {
-        NewsResponseDto updated = newsService.updateNews(id, dto);
-        return ResponseEntity.ok(ApiResponse.success("Cập nhật bài viết thành công!", updated));
+    public ResponseEntity<ApiResponse<NewsResponseDto>> updateNews(@PathVariable Long id, @Valid @ModelAttribute NewsRequestDto dto) {
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật bài viết thành công!", newsService.updateNews(id, dto)));
     }
 
-    // DELETE
+    @Operation(summary = "Delete news", description = "Admin: Xoá bài viết")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteNews(@PathVariable Long id) {
         newsService.deleteNews(id);
         return ResponseEntity.ok(ApiResponse.success("Xoá bài viết thành công!"));
     }
 
-    // GET ALL
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<NewsResponseDto>>> getAllNews() {
-        List<NewsResponseDto> list = newsService.getAllNews();
-        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách bài viết thành công!", list));
-    }
+    // ================= COMMON API =================
 
-    // GET DETAIL
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<NewsResponseDto>> getNewsById(@PathVariable Long id) {
-        NewsResponseDto dto = newsService.getNewsById(id);
-        return ResponseEntity.ok(ApiResponse.success("Lấy bài viết thành công!", dto));
-    }
-
-    @Operation(summary = "Get image", description = "API lấy hình ảnh của bài viết tin tức")
     @GetMapping("/image/{filename:.+}")
     public ResponseEntity<Resource> getImage(@PathVariable String filename) {
         try {
-            // Thư mục chứa ảnh tin tức
             Path filePath = Paths.get(NewsService.UPLOAD_DIR).resolve(filename).normalize();
-
-            // Kiểm tra file tồn tại
             Resource resource = new UrlResource(filePath.toUri());
-            if (!resource.exists() || !resource.isReadable()) {
-                throw new AppException(ErrorCode.FILE_NOT_FOUND);
-            }
+            if (!resource.exists() || !resource.isReadable()) throw new AppException(ErrorCode.FILE_NOT_FOUND);
 
-            // Xác định loại MIME của file
             String contentType = Files.probeContentType(filePath);
-            if (contentType == null) {
-                contentType = "application/octet-stream";
-            }
+            if (contentType == null) contentType = "application/octet-stream";
 
-            // Trả file về cho client
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
-                    // Bỏ cache để tránh lỗi 304 Not Modified
-                    .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
-                    .header(HttpHeaders.PRAGMA, "no-cache")
-                    .header(HttpHeaders.EXPIRES, "0")
                     .body(resource);
-
         } catch (MalformedURLException e) {
             throw new AppException(ErrorCode.FILE_NOT_FOUND);
         } catch (IOException e) {

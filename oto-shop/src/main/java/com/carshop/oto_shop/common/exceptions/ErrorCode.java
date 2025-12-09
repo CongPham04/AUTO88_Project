@@ -4,8 +4,8 @@ import org.springframework.http.HttpStatus;
 
 public enum ErrorCode {
     ACCOUNT_NOT_FOUND("ACCOUNT_NOT_FOUND", "Tài khoản không tồn tại!", HttpStatus.NOT_FOUND),
-    ACCOUNT_BANNED("ACCOUNT_BANNED", "Tài khoản của bạn đã bị cấm!", HttpStatus.FORBIDDEN),
-    ACCOUNT_INACTIVE("ACCOUNT_INACTIVE", "Tài khoản của bạn chưa được kích hoạt! Liên hệ ngay đến Admin để được kích hoạt.", HttpStatus.FORBIDDEN),
+    ACCOUNT_BANNED("ACCOUNT_BANNED", "Tài khoản của bạn đã bị khoá!", HttpStatus.FORBIDDEN),
+    ACCOUNT_INACTIVE("ACCOUNT_INACTIVE", "Tài khoản của bạn chưa được kích hoạt! Liên hệ ngay đến quản trị viên của Auto88 để được kích hoạt.", HttpStatus.FORBIDDEN),
     USER_NOT_FOUND("USER_NOT_FOUND","Người dùng không tồn tại!", HttpStatus.NOT_FOUND),
     CARCATEGORY_NOT_FOUND("CARCATEGORY_NOT_FOUND", "Danh mục không còn tồn tại!", HttpStatus.NOT_FOUND),
     CAR_NOT_FOUND("CARCATE_NOT_FOUND", "Sản phẩm không còn tồn tại!", HttpStatus.NOT_FOUND),
@@ -27,7 +27,14 @@ public enum ErrorCode {
     NEWS_NOT_FOUND("NEWS_NOT_FOUND", "Tin tức không tồn tại!", HttpStatus.NOT_FOUND),
     PROMOTION_NOT_FOUND("PROMOTION_NOT_FOUND", "Khuyến mãi không tồn tại!", HttpStatus.NOT_FOUND),
     PAYMENT_NOT_FOUND("PAYMENT_NOT_FOUND", "Thanh toán không tồn tại!", HttpStatus.NOT_FOUND),
-    VALIDATION_FAILED("VALIDATION_FAILED", "Dữ liệu nhập không hợp lệ", HttpStatus.BAD_REQUEST);
+    VALIDATION_FAILED("VALIDATION_FAILED", "Dữ liệu nhập không hợp lệ", HttpStatus.BAD_REQUEST),
+    LOGIN_FAILED("LOGIN_FAILED", "Email hoặc mật khẩu không chính xác!", HttpStatus.UNAUTHORIZED),
+    ACCOUNT_NOT_VERIFIED("ACCOUNT_NOT_VERIFIED", "Tài khoản chưa được xác thực. Vui lòng kiểm tra email để lấy mã kích hoạt.", HttpStatus.FORBIDDEN),
+    INVALID_VERIFICATION_CODE("INVALID_VERIFICATION_CODE", "Mã xác thực không đúng hoặc đã hết hạn.", HttpStatus.BAD_REQUEST),
+    VERIFICATION_CODE_EXPIRED("VERIFICATION_CODE_EXPIRED", "Mã xác thực đã hết hạn. Vui lòng đăng ký lại hoặc yêu cầu gửi lại mã.", HttpStatus.BAD_REQUEST),
+    ACCOUNT_ALREADY_VERIFIED("ACCOUNT_ALREADY_VERIFIED", "Tài khoản đã được kích hoạt trước đó, vui lòng đăng nhập.", HttpStatus.BAD_REQUEST),
+    ACCOUNT_DELETED("ACCOUNT_DELETED", "Tài khoản này đã bị xóa khỏi hệ thống.", HttpStatus.NOT_FOUND),
+    PASSWORD_RESET_LIMIT_EXCEEDED("PASSWORD_RESET_LIMIT_EXCEEDED", "Bạn đã đạt giới hạn! Vui lòng kiểm tra email hoặc thử lại sau 24 giờ.", HttpStatus.TOO_MANY_REQUESTS);
     private final String code;
     private final String message;
     private final HttpStatus httpStatus;

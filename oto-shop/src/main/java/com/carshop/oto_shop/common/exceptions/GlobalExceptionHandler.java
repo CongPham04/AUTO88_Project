@@ -1,6 +1,6 @@
 package com.carshop.oto_shop.common.exceptions;
 
-
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
@@ -19,91 +19,22 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    // 1. Xử lý chung cho AppException và các lớp con (BadRequest, DuplicateKey...)
     @ExceptionHandler(value = AppException.class)
     public ResponseEntity<ErrorResponse> handleAppException(AppException e) {
-            ErrorCode errorCode = e.getErrorCode();
-            ErrorResponse errorResponse = new ErrorResponse(
-                    errorCode.getCode(),
-                    errorCode.getMessage(),
-                    errorCode.getHttpStatus().value()
-            );
-            return ResponseEntity
-                    .status(errorCode.getHttpStatus().value())
-                    .body(errorResponse);
-    }
-
-    @ExceptionHandler(value = DuplicateKeyException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateKeyException(DuplicateKeyException e) {
+        ErrorCode errorCode = e.getErrorCode();
         ErrorResponse errorResponse = new ErrorResponse(
-                e.getErrorCode().getCode(),
-                e.getDmessage(),
-                e.getErrorCode().getHttpStatus().value()
+                errorCode.getCode(),
+                e.getMessage(), // Lấy message tùy chỉnh nếu có
+                errorCode.getHttpStatus().value()
         );
         return ResponseEntity
-                .status(errorResponse.getStatus())
+                .status(errorCode.getHttpStatus())
                 .body(errorResponse);
     }
 
-    @ExceptionHandler(value = BadRequestException.class)
-    public ResponseEntity<ErrorResponse> handleBadRequestException(BadRequestException e) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                e.getErrorCode().getCode(),
-                e.getBrmessage(),
-                e.getErrorCode().getHttpStatus().value()
-        );
-        return ResponseEntity
-                .status(errorResponse.getStatus())
-                .body(errorResponse);
-    }
-
-    @ExceptionHandler(value = HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setMessage(ErrorCode.METHOD_NOT_ALLOWED.getMessage());
-        errorResponse.setStatus(ErrorCode.METHOD_NOT_ALLOWED.getHttpStatus().value());
-        errorResponse.setTimestamp(LocalDateTime.now());
-        errorResponse.setErrorCode(ErrorCode.METHOD_NOT_ALLOWED.getCode());
-        return ResponseEntity
-                .status(errorResponse.getStatus())
-                .body(errorResponse);
-    }
-
-    @ExceptionHandler(value = HttpMediaTypeNotSupportedException.class)
-    public ResponseEntity<ErrorResponse> handleHttpMediaTypeNotSupportedException(HttpMediaTypeNotSupportedException e) {
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setStatus(ErrorCode.UNSUPPORTED_MEDIA_TYPE.getHttpStatus().value());
-        errorResponse.setMessage(ErrorCode.UNSUPPORTED_MEDIA_TYPE.getMessage());
-        errorResponse.setTimestamp(LocalDateTime.now());
-        errorResponse.setErrorCode(ErrorCode.UNSUPPORTED_MEDIA_TYPE.getCode());
-        return ResponseEntity
-                .status(errorResponse.getStatus())
-                .body(errorResponse);
-    }
-
-    @ExceptionHandler(value = MaxUploadSizeExceededException.class)
-    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e) {
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setErrorCode(ErrorCode.FILE_UPLOAD_ERROR.getCode());
-        errorResponse.setMessage(ErrorCode.FILE_UPLOAD_ERROR.getMessage());
-        errorResponse.setTimestamp(LocalDateTime.now());
-        errorResponse.setStatus(ErrorCode.FILE_SIZE_EXCEEDED.getHttpStatus().value());
-        return ResponseEntity
-                .status(errorResponse.getStatus())
-                .body(errorResponse);
-    }
-
-    @ExceptionHandler(value = LockedException.class)
-    public ResponseEntity<ErrorResponse> handleLockedException(LockedException e) {
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setErrorCode(ErrorCode.ACCOUNT_BANNED.getCode());
-        errorResponse.setMessage(ErrorCode.ACCOUNT_BANNED.getMessage());
-        errorResponse.setStatus(ErrorCode.ACCOUNT_BANNED.getHttpStatus().value());
-        errorResponse.setTimestamp(LocalDateTime.now());
-        return ResponseEntity
-                .status(errorResponse.getStatus())
-                .body(errorResponse);
-    }
-
+    // 2. Xử lý lỗi Validate (@Valid)
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex) {
         List<Map<String, String>> validationErrors = ex.getBindingResult()
@@ -111,7 +42,7 @@ public class GlobalExceptionHandler {
                 .stream()
                 .map(error -> Map.of(
                         "field", error.getField(),
-                        "message", error.getDefaultMessage()
+                        "message", error.getDefaultMessage() != null ? error.getDefaultMessage() : "Invalid"
                 ))
                 .collect(Collectors.toList());
 
@@ -119,38 +50,87 @@ public class GlobalExceptionHandler {
                 .map(err -> err.get("field") + ": " + err.get("message"))
                 .collect(Collectors.joining("; "));
 
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setErrorCode(ErrorCode.VALIDATION_FAILED.getCode());
-        errorResponse.setMessage(combinedMessage);
-        errorResponse.setStatus(ErrorCode.VALIDATION_FAILED.getHttpStatus().value());
-        errorResponse.setTimestamp(LocalDateTime.now());
+        ErrorResponse errorResponse = new ErrorResponse(
+                ErrorCode.VALIDATION_FAILED.getCode(),
+                combinedMessage,
+                ErrorCode.VALIDATION_FAILED.getHttpStatus().value()
+        );
         errorResponse.setErrors(validationErrors);
 
-        return ResponseEntity.status(errorResponse.getStatus()).body(errorResponse);
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    // 3. Xử lý lỗi Database (SQL Constraints, Duplicate Entry...)
+    @ExceptionHandler(value = DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
+        String message = e.getMostSpecificCause().getMessage();
+        String userMessage = "Lỗi dữ liệu hệ thống!";
+
+        // Phân tích sơ bộ lỗi để trả về message thân thiện hơn
+        if (message != null) {
+            if (message.contains("Duplicate entry")) {
+                userMessage = "Dữ liệu đã tồn tại hoặc bị trùng lặp trong hệ thống.";
+            } else if (message.contains("password_reset_tokens")) {
+                userMessage = "Yêu cầu đặt lại mật khẩu đang được xử lý, vui lòng chờ giây lát.";
+            }
+        }
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                ErrorCode.DUPLICATE_KEY.getCode(),
+                userMessage,
+                ErrorCode.DUPLICATE_KEY.getHttpStatus().value()
+        );
+        return ResponseEntity.status(ErrorCode.DUPLICATE_KEY.getHttpStatus()).body(errorResponse);
+    }
+
+    // 4. Các lỗi Security / Auth
+    @ExceptionHandler(value = LockedException.class)
+    public ResponseEntity<ErrorResponse> handleLockedException(LockedException e) {
+        return buildResponse(ErrorCode.ACCOUNT_BANNED);
     }
 
     @ExceptionHandler(value = DisabledException.class)
     public ResponseEntity<ErrorResponse> handleDisabledException(DisabledException e) {
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setErrorCode(ErrorCode.ACCOUNT_INACTIVE.getCode());
-        errorResponse.setMessage(ErrorCode.ACCOUNT_INACTIVE.getMessage());
-        errorResponse.setStatus(ErrorCode.ACCOUNT_INACTIVE.getHttpStatus().value());
-        errorResponse.setTimestamp(LocalDateTime.now());
-        return ResponseEntity
-                .status(errorResponse.getStatus())
-                .body(errorResponse);
+        return buildResponse(ErrorCode.ACCOUNT_INACTIVE);
     }
 
+    // 5. Các lỗi HTTP / File
+    @ExceptionHandler(value = HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
+        return buildResponse(ErrorCode.METHOD_NOT_ALLOWED);
+    }
+
+    @ExceptionHandler(value = HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException e) {
+        return buildResponse(ErrorCode.UNSUPPORTED_MEDIA_TYPE);
+    }
+
+    @ExceptionHandler(value = MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSize(MaxUploadSizeExceededException e) {
+        return buildResponse(ErrorCode.FILE_SIZE_EXCEEDED);
+    }
+
+    // 6. Fallback cho tất cả lỗi còn lại (Exception)
     @ExceptionHandler(value = Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception e, WebRequest request) {
-        ErrorResponse errorResponse = new ErrorResponse();
-     //   errorResponse.setMessage(ErrorCode.INTERNAL_SERVER_ERROR.getMessage() + " - Exception:" + e.getClass().getSimpleName());
-        errorResponse.setMessage(e.getMessage());
-        errorResponse.setErrorCode(ErrorCode.INTERNAL_SERVER_ERROR.getCode());
-        errorResponse.setStatus(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus().value());
-        errorResponse.setTimestamp(LocalDateTime.now());
-        return ResponseEntity
-                .status(errorResponse.getStatus())
-                .body(errorResponse);
+    public ResponseEntity<ErrorResponse> handleException(Exception e) {
+        // Log lỗi ra console để dev fix (không trả chi tiết Exception ra FE để bảo mật)
+        e.printStackTrace();
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                ErrorCode.INTERNAL_SERVER_ERROR.getCode(),
+                "Đã có lỗi xảy ra, vui lòng thử lại sau!", // Message chung chung an toàn
+                ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus().value()
+        );
+        return ResponseEntity.status(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus()).body(errorResponse);
+    }
+
+    // Hàm helper để tạo Response nhanh từ ErrorCode
+    private ResponseEntity<ErrorResponse> buildResponse(ErrorCode errorCode) {
+        ErrorResponse response = new ErrorResponse(
+                errorCode.getCode(),
+                errorCode.getMessage(),
+                errorCode.getHttpStatus().value()
+        );
+        return ResponseEntity.status(errorCode.getHttpStatus()).body(response);
     }
 }

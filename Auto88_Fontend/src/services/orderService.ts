@@ -1,25 +1,10 @@
 import apiClient from '@/lib/apiClient';
 
-// Enums
-export type OrderStatus =
-  | 'PENDING'
-  | 'CONFIRMED'
-  | 'SHIPPING'
-  | 'DELIVERED'
-  | 'CANCELLED'
-  | 'COMPLETED';
-
+// ... (Giữ nguyên các Enum và Interface) ...
+export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'SHIPPING' | 'DELIVERED' | 'CANCELLED' | 'COMPLETED';
 export type PaymentStatus = 'PENDING' | 'SUCCESS' | 'FAILED';
+export type PaymentMethod = 'CASH' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'BANK_TRANSFER' | 'VNPAY' | 'MOMO';
 
-export type PaymentMethod =
-  | 'CASH'
-  | 'CREDIT_CARD'
-  | 'DEBIT_CARD'
-  | 'BANK_TRANSFER'
-  | 'VNPAY'
-  | 'MOMO';
-
-// OrderDetail Interfaces
 export interface OrderDetailResponse {
   orderDetailId: number;
   carId: number;
@@ -29,7 +14,6 @@ export interface OrderDetailResponse {
   subtotal: number;
 }
 
-// Payment Interfaces
 export interface PaymentResponse {
   paymentId: string;
   orderId: string;
@@ -49,7 +33,6 @@ export interface PaymentRequest {
   transactionId?: string;
 }
 
-// Order Interfaces
 export interface OrderResponse {
   orderId: string;
   userId: string;
@@ -65,7 +48,7 @@ export interface OrderResponse {
   shippingFee: number;
   tax: number;
   totalAmount: number;
-  orderDate: string; // ISO date-time
+  orderDate: string;
   status: OrderStatus;
   createdAt: string;
   updatedAt: string;
@@ -117,335 +100,165 @@ export interface ApiResponse<T> {
 class OrderService {
   // ==================== Order CRUD Operations ====================
 
-  /**
-   * Get all orders (for admin)
-   */
   async getAllOrders(): Promise<OrderResponse[]> {
     const response = await apiClient.get<ApiResponse<OrderResponse[]>>('/orders');
-
-    if (response.data.code === 200) {
-      return response.data.data;
-    } else {
-      throw new Error(response.data.message || 'Lỗi khi tải danh sách đơn hàng');
-    }
+    if (response.data.code === 200) return response.data.data;
+    throw new Error(response.data.message || 'Lỗi khi tải danh sách đơn hàng');
   }
 
-  /**
-   * Get order by ID
-   */
   async getOrderById(orderId: string): Promise<OrderResponse> {
-    const response = await apiClient.get<ApiResponse<OrderResponse>>(
-      `/orders/${orderId}`
-    );
-
-    if (response.data.code === 200) {
-      return response.data.data;
-    } else {
-      throw new Error(response.data.message || 'Lỗi khi tải thông tin đơn hàng');
-    }
+    const response = await apiClient.get<ApiResponse<OrderResponse>>(`/orders/${orderId}`);
+    if (response.data.code === 200) return response.data.data;
+    throw new Error(response.data.message || 'Lỗi khi tải thông tin đơn hàng');
   }
 
-  /**
-   * Get orders by user ID
-   */
   async getOrdersByUserId(userId: string): Promise<OrderResponse[]> {
-    const response = await apiClient.get<ApiResponse<OrderResponse[]>>(
-      `/orders/user/${userId}`
-    );
-
-    if (response.data.code === 200) {
-      return response.data.data;
-    } else {
-      throw new Error(response.data.message || 'Lỗi khi tải đơn hàng của người dùng');
-    }
+    const response = await apiClient.get<ApiResponse<OrderResponse[]>>(`/orders/user/${userId}`);
+    if (response.data.code === 200) return response.data.data;
+    throw new Error(response.data.message || 'Lỗi khi tải đơn hàng của người dùng');
   }
 
-  /**
-   * Get orders by status (for admin)
-   */
   async getOrdersByStatus(status: OrderStatus): Promise<OrderResponse[]> {
-    const response = await apiClient.get<ApiResponse<OrderResponse[]>>(
-      `/orders/status/${status}`
-    );
-
-    if (response.data.code === 200) {
-      return response.data.data;
-    } else {
-      throw new Error(response.data.message || 'Lỗi khi tải đơn hàng theo trạng thái');
-    }
+    const response = await apiClient.get<ApiResponse<OrderResponse[]>>(`/orders/status/${status}`);
+    if (response.data.code === 200) return response.data.data;
+    throw new Error(response.data.message || 'Lỗi khi tải đơn hàng theo trạng thái');
   }
 
-  /**
-   * Create new order
-   */
   async createOrder(orderData: OrderRequest): Promise<OrderResponse> {
-    console.log('Creating order with data:', orderData);
-
     try {
-      const response = await apiClient.post<ApiResponse<OrderResponse>>(
-        '/orders',
-        orderData
-      );
-
-      console.log('Create order response:', response.data);
-
-      if (response.data.code === 200 || response.data.code === 201) {
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Lỗi khi tạo đơn hàng');
-      }
+      const response = await apiClient.post<ApiResponse<OrderResponse>>('/orders', orderData);
+      if (response.data.code === 200 || response.data.code === 201) return response.data.data;
+      throw new Error(response.data.message || 'Lỗi khi tạo đơn hàng');
     } catch (error: any) {
-      console.error('Create order error:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
       throw error;
     }
   }
 
-  /**
-   * Update order information
-   */
-  async updateOrder(
-    orderId: string,
-    orderData: OrderUpdateRequest
-  ): Promise<OrderResponse> {
-    console.log('Updating order:', orderId, orderData);
-
-    const response = await apiClient.put<ApiResponse<OrderResponse>>(
-      `/orders/${orderId}`,
-      orderData
-    );
-
-    if (response.data.code === 200) {
-      return response.data.data;
-    } else {
-      throw new Error(response.data.message || 'Lỗi khi cập nhật đơn hàng');
-    }
+  async updateOrder(orderId: string, orderData: OrderUpdateRequest): Promise<OrderResponse> {
+    const response = await apiClient.put<ApiResponse<OrderResponse>>(`/orders/${orderId}`, orderData);
+    if (response.data.code === 200) return response.data.data;
+    throw new Error(response.data.message || 'Lỗi khi cập nhật đơn hàng');
   }
 
-  /**
-   * Update order status (for admin)
-   */
-  async updateOrderStatus(
-    orderId: string,
-    status: OrderStatus
-  ): Promise<OrderResponse> {
-    console.log('Updating order status:', orderId, status);
-
+  async updateOrderStatus(orderId: string, status: OrderStatus): Promise<OrderResponse> {
     const response = await apiClient.patch<ApiResponse<OrderResponse>>(
-      `/orders/${orderId}/status`,
-      null,
-      { params: { status } }
+      `/orders/${orderId}/status`, null, { params: { status } }
     );
-
-    if (response.data.code === 200) {
-      return response.data.data;
-    } else {
-      throw new Error(response.data.message || 'Lỗi khi cập nhật trạng thái đơn hàng');
-    }
+    if (response.data.code === 200) return response.data.data;
+    throw new Error(response.data.message || 'Lỗi khi cập nhật trạng thái đơn hàng');
   }
 
-  /**
-   * Delete order (for admin)
-   */
   async deleteOrder(orderId: string): Promise<void> {
-    const response = await apiClient.delete<ApiResponse<void>>(
-      `/admin/orders/${orderId}`
-    );
-
-    if (response.data.code !== 200) {
-      throw new Error(response.data.message || 'Lỗi khi xóa đơn hàng');
-    }
+    // Lưu ý: Backend controller định nghĩa là DELETE /api/orders/{orderId}, 
+    // không phải /admin/orders/... (trừ khi Security config chặn)
+    const response = await apiClient.delete<ApiResponse<void>>(`/orders/${orderId}`);
+    if (response.data.code !== 200) throw new Error(response.data.message || 'Lỗi khi xóa đơn hàng');
   }
 
-  // ==================== OrderDetail Operations ====================
-
-  /**
-   * Get all order details
-   */
-  async getAllOrderDetails(): Promise<OrderDetailResponse[]> {
-    const response = await apiClient.get<ApiResponse<OrderDetailResponse[]>>(
-      '/order-details'
+  // [THÊM MỚI] Hàm hủy đơn hàng kèm lý do
+  async cancelOrder(orderId: string, cancelReason: string): Promise<OrderResponse> {
+    // API backend: POST /api/orders/{orderId}/cancel
+    // Body: cancelReason (string)
+    const response = await apiClient.post<ApiResponse<OrderResponse>>(
+      `/orders/${orderId}/cancel`, 
+      cancelReason, // Gửi text trực tiếp nếu backend nhận @RequestBody String
+      { headers: { 'Content-Type': 'text/plain' } } // Đảm bảo content type là text
     );
+    
+    // Nếu backend nhận JSON { "cancelReason": "..." } thì sửa lại:
+    // const response = await apiClient.post(`/orders/${orderId}/cancel`, { cancelReason });
 
-    if (response.data.code === 200) {
-      return response.data.data;
-    } else {
-      throw new Error(response.data.message || 'Lỗi khi tải chi tiết đơn hàng');
-    }
+    if (response.data.code === 200) return response.data.data;
+    throw new Error(response.data.message || 'Lỗi khi hủy đơn hàng');
   }
+
+  // ==================== OrderDetail Operations (Đã cập nhật URL) ====================
 
   /**
    * Get order detail by ID
+   * URL cũ: /order-details/${orderDetailId}
+   * URL mới: /orders/details/${orderDetailId}
    */
   async getOrderDetailById(orderDetailId: number): Promise<OrderDetailResponse> {
     const response = await apiClient.get<ApiResponse<OrderDetailResponse>>(
-      `/order-details/${orderDetailId}`
+      `/orders/details/${orderDetailId}`
     );
-
-    if (response.data.code === 200) {
-      return response.data.data;
-    } else {
-      throw new Error(response.data.message || 'Lỗi khi tải chi tiết đơn hàng');
-    }
+    if (response.data.code === 200) return response.data.data;
+    throw new Error(response.data.message || 'Lỗi khi tải chi tiết đơn hàng');
   }
 
   /**
    * Get order details by order ID
+   * URL cũ: /order-details/order/${orderId}
+   * URL mới: /orders/${orderId}/details
    */
   async getOrderDetailsByOrderId(orderId: string): Promise<OrderDetailResponse[]> {
     const response = await apiClient.get<ApiResponse<OrderDetailResponse[]>>(
-      `/order-details/order/${orderId}`
+      `/orders/${orderId}/details`
     );
-
-    if (response.data.code === 200) {
-      return response.data.data;
-    } else {
-      throw new Error(
-        response.data.message || 'Lỗi khi tải chi tiết đơn hàng theo mã đơn'
-      );
-    }
+    if (response.data.code === 200) return response.data.data;
+    throw new Error(response.data.message || 'Lỗi khi tải chi tiết đơn hàng theo mã đơn');
   }
 
   /**
    * Delete order detail
+   * URL cũ: /order-details/${orderDetailId}
+   * URL mới: /orders/details/${orderDetailId}
    */
   async deleteOrderDetail(orderDetailId: number): Promise<void> {
     const response = await apiClient.delete<ApiResponse<void>>(
-      `/order-details/${orderDetailId}`
+      `/orders/details/${orderDetailId}`
     );
-
-    if (response.data.code !== 200) {
-      throw new Error(response.data.message || 'Lỗi khi xóa chi tiết đơn hàng');
-    }
+    if (response.data.code !== 200) throw new Error(response.data.message || 'Lỗi khi xóa chi tiết đơn hàng');
   }
 
-  // ==================== Payment Operations ====================
+  // ==================== Payment Operations (Giữ nguyên URL) ====================
 
-  /**
-   * Get all payments
-   */
   async getAllPayments(): Promise<PaymentResponse[]> {
     const response = await apiClient.get<ApiResponse<PaymentResponse[]>>('/payments');
-
-    if (response.data.code === 200) {
-      return response.data.data;
-    } else {
-      throw new Error(response.data.message || 'Lỗi khi tải danh sách thanh toán');
-    }
+    if (response.data.code === 200) return response.data.data;
+    throw new Error(response.data.message || 'Lỗi khi tải danh sách thanh toán');
   }
 
-  /**
-   * Get payment by ID
-   */
   async getPaymentById(paymentId: string): Promise<PaymentResponse> {
-    const response = await apiClient.get<ApiResponse<PaymentResponse>>(
-      `/payments/${paymentId}`
-    );
-
-    if (response.data.code === 200) {
-      return response.data.data;
-    } else {
-      throw new Error(response.data.message || 'Lỗi khi tải thông tin thanh toán');
-    }
+    const response = await apiClient.get<ApiResponse<PaymentResponse>>(`/payments/${paymentId}`);
+    if (response.data.code === 200) return response.data.data;
+    throw new Error(response.data.message || 'Lỗi khi tải thông tin thanh toán');
   }
 
-  /**
-   * Get payment by order ID
-   */
   async getPaymentByOrderId(orderId: string): Promise<PaymentResponse> {
-    const response = await apiClient.get<ApiResponse<PaymentResponse>>(
-      `/payments/order/${orderId}`
-    );
-
-    if (response.data.code === 200) {
-      return response.data.data;
-    } else {
-      throw new Error(
-        response.data.message || 'Lỗi khi tải thanh toán theo mã đơn hàng'
-      );
-    }
+    const response = await apiClient.get<ApiResponse<PaymentResponse>>(`/payments/order/${orderId}`);
+    if (response.data.code === 200) return response.data.data;
+    throw new Error(response.data.message || 'Lỗi khi tải thanh toán theo mã đơn hàng');
   }
 
-  /**
-   * Get payments by status
-   */
   async getPaymentsByStatus(status: PaymentStatus): Promise<PaymentResponse[]> {
-    const response = await apiClient.get<ApiResponse<PaymentResponse[]>>(
-      `/payments/status/${status}`
-    );
-
-    if (response.data.code === 200) {
-      return response.data.data;
-    } else {
-      throw new Error(response.data.message || 'Lỗi khi tải thanh toán theo trạng thái');
-    }
+    const response = await apiClient.get<ApiResponse<PaymentResponse[]>>(`/payments/status/${status}`);
+    if (response.data.code === 200) return response.data.data;
+    throw new Error(response.data.message || 'Lỗi khi tải thanh toán theo trạng thái');
   }
 
-  /**
-   * Create payment
-   */
   async createPayment(paymentData: PaymentRequest): Promise<PaymentResponse> {
-    console.log('Creating payment:', paymentData);
-
     try {
-      const response = await apiClient.post<ApiResponse<PaymentResponse>>(
-        '/payments',
-        paymentData
-      );
-
-      console.log('Create payment response:', response.data);
-
-      if (response.data.code === 200 || response.data.code === 201) {
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Lỗi khi tạo thanh toán');
-      }
+      const response = await apiClient.post<ApiResponse<PaymentResponse>>('/payments', paymentData);
+      if (response.data.code === 200 || response.data.code === 201) return response.data.data;
+      throw new Error(response.data.message || 'Lỗi khi tạo thanh toán');
     } catch (error: any) {
-      console.error('Create payment error:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
       throw error;
     }
   }
 
-  /**
-   * Update payment status (for admin)
-   */
-  async updatePaymentStatus(
-    paymentId: string,
-    status: PaymentStatus
-  ): Promise<PaymentResponse> {
-    console.log('Updating payment status:', paymentId, status);
-
+  async updatePaymentStatus(paymentId: string, status: PaymentStatus): Promise<PaymentResponse> {
     const response = await apiClient.patch<ApiResponse<PaymentResponse>>(
-      `/payments/${paymentId}/status`,
-      null,
-      { params: { status } }
+      `/payments/${paymentId}/status`, null, { params: { status } }
     );
-
-    if (response.data.code === 200) {
-      return response.data.data;
-    } else {
-      throw new Error(response.data.message || 'Lỗi khi cập nhật trạng thái thanh toán');
-    }
+    if (response.data.code === 200) return response.data.data;
+    throw new Error(response.data.message || 'Lỗi khi cập nhật trạng thái thanh toán');
   }
 
-  /**
-   * Delete payment (for admin)
-   */
   async deletePayment(paymentId: string): Promise<void> {
-    const response = await apiClient.delete<ApiResponse<void>>(
-      `/admin/payments/${paymentId}`
-    );
-
-    if (response.data.code !== 200) {
-      throw new Error(response.data.message || 'Lỗi khi xóa thanh toán');
-    }
+    const response = await apiClient.delete<ApiResponse<void>>(`/payments/${paymentId}`);
+    if (response.data.code !== 200) throw new Error(response.data.message || 'Lỗi khi xóa thanh toán');
   }
 }
 

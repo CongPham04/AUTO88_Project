@@ -18,7 +18,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
-
 @Configuration
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
@@ -38,18 +37,21 @@ public class SecurityConfig {
         this.authEntryPointJwt = authEntryPointJwt;
         this.accessDeniedHandler = accessDeniedHandler;
     }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // tắt CSRF (dành cho Postman test API)
+                .csrf(csrf -> csrf.disable()) // Tắt CSRF (cho API stateless)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(authEntryPointJwt)
                         .accessDeniedHandler(accessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
+                        // ================== ALLOW PRE-FLIGHT ==================
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // ================== Swagger ==================
+
+                        // ================== SWAGGER UI ==================
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
@@ -58,84 +60,84 @@ public class SecurityConfig {
                                 "/webjars/**"
                         ).permitAll()
 
-                        // ================== AUTH ==================
+                        // ================== PUBLIC ENDPOINTS ==================
+                        // Auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
 
-                        // ================== HOME (public) ==================
-                        .requestMatchers(HttpMethod.GET,
-                                "/api/home/**",
-                                "/api/meta/**",
-                                "/api/search/**").permitAll()
+                        // Home & Meta
+                        .requestMatchers(HttpMethod.GET, "/api/home/**", "/api/meta/**").permitAll()
 
-                        // ================== CARS ==================
-                        // Public
+                        // Public Assets (User avatars, etc.)
+                        .requestMatchers(HttpMethod.GET, "/api/users/avatar/image/**").permitAll()
+
+                        // ================== CARS (PUBLIC READ / ADMIN WRITE) ==================
+                        // Public: Xem danh sách, chi tiết, tìm kiếm, so sánh, xem ảnh
+                        // Dòng này bao gồm: /api/cars, /api/cars/{id}, /api/cars/search, /api/cars/compare, /api/cars/image/**
                         .requestMatchers(HttpMethod.GET, "/api/cars/**").permitAll()
-                        // Admin
+
+                        // Admin: Thêm (Unified), Sửa (Unified), Xóa
                         .requestMatchers(HttpMethod.POST, "/api/cars/**").hasRole(Role.ADMIN.name())
                         .requestMatchers(HttpMethod.PUT, "/api/cars/**").hasRole(Role.ADMIN.name())
                         .requestMatchers(HttpMethod.DELETE, "/api/cars/**").hasRole(Role.ADMIN.name())
 
-                        // ================== CAR DETAILS ==================
-                        // Public
-                        .requestMatchers(HttpMethod.GET, "/api/car-details/**").permitAll()
-                        // Admin
-                        .requestMatchers(HttpMethod.POST, "/api/car-details/**").hasRole(Role.ADMIN.name())
-                        .requestMatchers(HttpMethod.PUT, "/api/car-details/**").hasRole(Role.ADMIN.name())
-                        .requestMatchers(HttpMethod.DELETE, "/api/car-details/**").hasRole(Role.ADMIN.name())
+                        // ================== USERS (SPECIFIC RULES FIRST) ==================
+                        // Đổi mật khẩu (User + Admin)
+                        .requestMatchers(HttpMethod.POST, "/api/users/change-password").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
 
-                        // ================== USERS ==================
-                        // Public avatar
-                        .requestMatchers(HttpMethod.GET, "/api/users/avatar/image/**").permitAll()
-                        //Admin + User
-                        .requestMatchers(HttpMethod.GET, "/api/users/username/{username}").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
+                        // Lấy thông tin theo email
+                        .requestMatchers(HttpMethod.GET, "/api/users/email/{email}").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
+
+                        // Admin Search User
+                        .requestMatchers(HttpMethod.GET, "/api/users/search").hasRole(Role.ADMIN.name())
+
+                        // Users CRUD Generic (Update profile)
                         .requestMatchers(HttpMethod.PUT, "/api/users/**").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
-                        // Admin management
+
+                        // Admin Management (Create, Delete, Get All Users)
                         .requestMatchers(HttpMethod.POST, "/api/users/**").hasRole(Role.ADMIN.name())
                         .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasRole(Role.ADMIN.name())
                         .requestMatchers(HttpMethod.GET, "/api/users/**").hasRole(Role.ADMIN.name())
 
-
-
                         // ================== ORDERS ==================
-                        // User + Admin
-                        .requestMatchers(HttpMethod.POST, "/api/orders/**").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
-                        .requestMatchers(HttpMethod.GET, "/api/orders/**").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
-                        .requestMatchers(HttpMethod.PATCH, "/api/orders/**").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
-                        // Admin only
-                        .requestMatchers(HttpMethod.DELETE, "/api/orders/**").hasRole(Role.ADMIN.name())
+                        // 1. Admin Only Actions (Nghiệp vụ quản lý)
+                        .requestMatchers(HttpMethod.GET, "/api/orders").hasRole(Role.ADMIN.name()) // ✅ Lấy TẤT CẢ đơn hàng
+                        .requestMatchers(HttpMethod.GET, "/api/orders/status/**").hasRole(Role.ADMIN.name()) // ✅ Lọc trạng thái toàn hệ thống
+                        .requestMatchers(HttpMethod.DELETE, "/api/orders/**").hasRole(Role.ADMIN.name()) // Xoá đơn
+                        .requestMatchers(HttpMethod.PATCH, "/api/orders/*/status").hasRole(Role.ADMIN.name()) // Cập nhật trạng thái
+
+                        // 2. Shared Actions (Cá nhân User & Admin xem chi tiết)
+                        .requestMatchers(HttpMethod.GET, "/api/orders/user/{userId}").hasAnyRole(Role.ADMIN.name(), Role.USER.name()) // ✅ Lịch sử đơn của user
+                        .requestMatchers(HttpMethod.GET, "/api/orders/{orderId}").hasAnyRole(Role.ADMIN.name(), Role.USER.name()) // ✅ Xem chi tiết đơn
+                        .requestMatchers(HttpMethod.GET, "/api/orders/{orderId}/details").hasAnyRole(Role.ADMIN.name(), Role.USER.name()) // ✅ Xem item trong đơn
+
+                        // 3. User Actions
+                        .requestMatchers(HttpMethod.POST, "/api/orders/*/cancel").hasAnyRole(Role.ADMIN.name(), Role.USER.name()) // Hủy đơn
+                        .requestMatchers(HttpMethod.POST, "/api/orders").hasAnyRole(Role.ADMIN.name(), Role.USER.name()) // Tạo đơn mới
 
                         // ================== PAYMENTS ==================
-                        // User + Admin
-                        .requestMatchers(HttpMethod.POST, "/api/payments/**").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
-                        .requestMatchers(HttpMethod.GET, "/api/payments/**").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
-                        // Admin only
                         .requestMatchers(HttpMethod.PATCH, "/api/payments/**").hasRole(Role.ADMIN.name())
                         .requestMatchers(HttpMethod.DELETE, "/api/payments/**").hasRole(Role.ADMIN.name())
+                        .requestMatchers("/api/payments/**").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
 
                         // ================== PROMOTIONS ==================
-                        // Public
                         .requestMatchers(HttpMethod.GET, "/api/promotions/**").permitAll()
-                        // Admin
-                        .requestMatchers(HttpMethod.POST, "/api/promotions/**").hasRole(Role.ADMIN.name())
-                        .requestMatchers(HttpMethod.PUT, "/api/promotions/**").hasRole(Role.ADMIN.name())
-                        .requestMatchers(HttpMethod.DELETE, "/api/promotions/**").hasRole(Role.ADMIN.name())
+                        .requestMatchers("/api/promotions/**").hasRole(Role.ADMIN.name())
 
                         // ================== NEWS ==================
-                        // Public
-                        .requestMatchers(HttpMethod.GET, "/api/news/**").permitAll()
-                        // Admin
-                        .requestMatchers(HttpMethod.POST, "/api/news/**").hasRole(Role.ADMIN.name())
-                        .requestMatchers(HttpMethod.PUT, "/api/news/**").hasRole(Role.ADMIN.name())
-                        .requestMatchers(HttpMethod.DELETE, "/api/news/**").hasRole(Role.ADMIN.name())
-                        .requestMatchers(HttpMethod.PATCH, "/api/news/**").hasRole(Role.ADMIN.name())
+                                // 1. Public Access (Khách xem tin published)
+                                .requestMatchers(HttpMethod.GET, "/api/news/published/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/news/image/**").permitAll()
 
+                                // 2. Admin Access (Quản lý tin tức)
+                                // Các endpoint còn lại của /api/news/** (GET all, POST, PUT, DELETE) sẽ yêu cầu quyền ADMIN
+                                .requestMatchers("/api/news/**").hasRole(Role.ADMIN.name())
                         // ================== ADMIN DASHBOARD ==================
-                        .requestMatchers(HttpMethod.GET, "/api/admin/**").hasRole(Role.ADMIN.name())
+                        .requestMatchers("/api/admin/**").hasRole(Role.ADMIN.name())
 
-                        // ================== Any other ==================
+                        // ================== FALLBACK ==================
                         .anyRequest().authenticated()
-
                 );
+
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

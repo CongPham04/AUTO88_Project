@@ -36,57 +36,56 @@ public class SwaggerConfig {
                                         .bearerFormat("JWT")));
     }
 
-    // ================== ALL ==================
+    // ================== ALL API ==================
     @Bean
     public GroupedOpenApi allApi() {
         return GroupedOpenApi.builder()
-                .group("All API")
+                .group("1. All API")
                 .pathsToMatch("/**")
                 .build();
     }
 
-    // ================== PUBLIC ==================
+    // ================== PUBLIC API ==================
     @Bean
     public GroupedOpenApi publicApi() {
         return GroupedOpenApi.builder()
-                .group("Public API")
+                .group("2. Public API")
                 .pathsToMatch(
                         "/api/auth/**",
                         "/api/home/**",
                         "/api/meta/**",
-                        "/api/search/**",
-                        "/api/cars/**",
-                        "/api/car-details/**",
+                        "/api/cars/**",      // Đã bao gồm: image, search, compare, details
                         "/api/promotions/**",
-                        "/api/news/**",
+                        // ✅ CẬP NHẬT: Chỉ hiển thị các API tin tức công khai
+                        "/api/news/published/**",
+                        "/api/news/image/**",
                         "/api/users/avatar/image/**"
                 )
                 .build();
     }
 
-    // ================== USER ==================
+    // ================== USER API ==================
     @Bean
     public GroupedOpenApi userApi() {
         return GroupedOpenApi.builder()
-                .group("User API")
+                .group("3. User API")
                 .pathsToMatch(
                         "/api/orders/**",
-                        "/api/payments/**"
-                        // nếu muốn thêm user profile (ví dụ /api/users/me) thì thêm ở đây
+                        "/api/payments/**",
+                        "/api/users/**"
                 )
                 .build();
     }
 
-    // ================== ADMIN ==================
+    // ================== ADMIN API ==================
     @Bean
     public GroupedOpenApi adminApi() {
         return GroupedOpenApi.builder()
-                .group("Admin API")
+                .group("4. Admin API")
                 .pathsToMatch(
                         "/api/admin/**",
                         "/api/users/**",
-                        "/api/cars/**",
-                        "/api/car-details/**",
+                        "/api/cars/**",      // Admin quản lý xe
                         "/api/orders/**",
                         "/api/payments/**",
                         "/api/promotions/**",

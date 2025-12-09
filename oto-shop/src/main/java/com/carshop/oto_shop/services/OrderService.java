@@ -31,58 +31,66 @@ public class OrderService {
     private final UserRepository userRepository;
     private final CarRepository carRepository;
     private final OrderMapper orderMapper;
+    // ✅ Inject EmailService
+    private final EmailService emailService;
 
     public OrderService(OrderRepository orderRepository,
                        OrderDetailRepository orderDetailRepository,
                        PaymentRepository paymentRepository,
                        UserRepository userRepository,
                        CarRepository carRepository,
-                       OrderMapper orderMapper) {
+                       OrderMapper orderMapper,
+                        EmailService emailService) {
         this.orderRepository = orderRepository;
         this.orderDetailRepository = orderDetailRepository;
         this.paymentRepository = paymentRepository;
         this.userRepository = userRepository;
         this.carRepository = carRepository;
         this.orderMapper = orderMapper;
+        this.emailService = emailService;
     }
 
+    // ==================== 1. TẠO ĐƠN HÀNG (Trừ Tồn Kho) ====================
     @Transactional
     public OrderResponse createOrder(OrderRequest orderRequest) {
         try {
-            // Validate user exists
             User user = userRepository.findById(orderRequest.getUserId())
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-            // Create order
             Order order = orderMapper.toOrder(orderRequest);
             order.setUser(user);
+            if (order.getShippingFee() == null) order.setShippingFee(BigDecimal.ZERO);
+            if (order.getTax() == null) order.setTax(BigDecimal.ZERO);
 
-            // Set default values for fees if null
-            if (order.getShippingFee() == null) {
-                order.setShippingFee(BigDecimal.ZERO);
-            }
-            if (order.getTax() == null) {
-                order.setTax(BigDecimal.ZERO);
-            }
-
-            // Create order details and calculate subtotal
             List<OrderDetail> orderDetails = new ArrayList<>();
             BigDecimal subtotal = BigDecimal.ZERO;
 
             for (OrderDetailRequest detailRequest : orderRequest.getOrderDetails()) {
+                // Lock row để tránh Race Condition (nếu cần thiết có thể dùng PESSIMISTIC_WRITE)
                 Car car = carRepository.findById(detailRequest.getCarId())
                         .orElseThrow(() -> new AppException(ErrorCode.CAR_NOT_FOUND));
+
+                // ✅ LOGIC TỒN KHO: Kiểm tra số lượng
+                if (car.getQuantity() < detailRequest.getQuantity()) {
+                    throw new BadRequestException("Sản phẩm " + car.getModel() + " không đủ hàng trong kho! (Còn: " + car.getQuantity() + ")");
+                }
+
+                // ✅ LOGIC TỒN KHO: Trừ tồn kho ngay khi đặt
+                car.setQuantity(car.getQuantity() - detailRequest.getQuantity());
+
+                // Cập nhật trạng thái xe nếu hết hàng
+                car.updateStatusBasedOnQuantity();
+                carRepository.save(car);
 
                 OrderDetail orderDetail = new OrderDetail();
                 orderDetail.setOrder(order);
                 orderDetail.setCar(car);
                 orderDetail.setQuantity(detailRequest.getQuantity());
-                orderDetail.setColorName(detailRequest.getColorName()); // Snapshot color at order time
-                orderDetail.setPrice(car.getPrice()); // Snapshot price at order time
+                orderDetail.setColorName(detailRequest.getColorName());
+                orderDetail.setPrice(car.getPrice());
 
                 BigDecimal itemTotal = car.getPrice().multiply(BigDecimal.valueOf(detailRequest.getQuantity()));
                 subtotal = subtotal.add(itemTotal);
-
                 orderDetails.add(orderDetail);
             }
 
@@ -90,34 +98,26 @@ public class OrderService {
             order.setTotalAmount(subtotal.add(order.getShippingFee()).add(order.getTax()));
             order.setOrderDetails(orderDetails);
 
-            // Create payment
             Payment payment = new Payment();
             payment.setOrder(order);
             payment.setAmount(order.getTotalAmount());
             payment.setPaymentMethod(orderRequest.getPaymentMethod());
             order.setPayment(payment);
 
-            // Save order (cascade will save order details and payment)
             Order savedOrder = orderRepository.save(order);
+            logger.info("Created order {}", savedOrder.getOrderId());
 
-            logger.info("Created order {} for user {} with total amount {}",
-                    savedOrder.getOrderId(), user.getUserId(), savedOrder.getTotalAmount());
+            // ✅ GỬI EMAIL XÁC NHẬN (Async)
+            // Đặt trong try-catch riêng để lỗi gửi mail không làm rollback đơn hàng
+            try {
+                emailService.sendOrderConfirmation(savedOrder);
+            } catch (Exception e) {
+                logger.error("Failed to send order confirmation email", e);
+            }
 
             return orderMapper.toOrderResponse(savedOrder);
-        } catch (DataIntegrityViolationException e) {
-            String message = e.getMostSpecificCause().getMessage();
-            logger.error("DataIntegrityViolationException caught: {}", message);
-
-            if (message != null) {
-                if (message.contains("cannot be null")) {
-                    String field = message.substring(message.indexOf("'") + 1, message.lastIndexOf("'"));
-                    throw new BadRequestException(field + " không được để trống!");
-                } else {
-                    throw new AppException(ErrorCode.BAD_REQUEST);
-                }
-            } else {
-                throw new AppException(ErrorCode.UNKNOWN);
-            }
+        } catch (AppException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("Error creating order: {}", e.getMessage(), e);
             throw new AppException(ErrorCode.UNKNOWN);
@@ -224,60 +224,90 @@ public class OrderService {
         }
     }
 
+    // ==================== 2. CẬP NHẬT TRẠNG THÁI (Cộng đã bán, Hoàn tồn kho) ====================
     @Transactional
-    public OrderResponse updateOrderStatus(String orderId, OrderStatus status) {
-        try {
-            Order order = orderRepository.findById(orderId)
-                    .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+    public OrderResponse updateOrderStatus(String orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
-            order.setStatus(status);
-            Order updatedOrder = orderRepository.save(order);
+        OrderStatus oldStatus = order.getStatus();
 
-            logger.info("Updated order {} status to {}", orderId, status);
-            return orderMapper.toOrderResponse(updatedOrder);
-        } catch (DataIntegrityViolationException e) {
-            String message = e.getMostSpecificCause().getMessage();
-            logger.error("DataIntegrityViolationException caught: {}", message);
-
-            if (message != null) {
-                if (message.contains("cannot be null")) {
-                    String field = message.substring(message.indexOf("'") + 1, message.lastIndexOf("'"));
-                    throw new BadRequestException(field + " không được để trống!");
-                } else {
-                    throw new AppException(ErrorCode.BAD_REQUEST);
-                }
-            } else {
-                throw new AppException(ErrorCode.UNKNOWN);
-            }
-        } catch (Exception e) {
-            logger.error("Error updating order status: {}", e.getMessage(), e);
-            throw new AppException(ErrorCode.UNKNOWN);
+        // Không cho phép cập nhật nếu đơn đã hoàn thành hoặc đã hủy (Logic chặt chẽ)
+        if (oldStatus == OrderStatus.COMPLETED || oldStatus == OrderStatus.CANCELLED) {
+            throw new BadRequestException("Không thể cập nhật trạng thái đơn hàng đã hoàn thành hoặc đã hủy!");
         }
+
+        // ✅ LOGIC 1: Nếu Huỷ đơn (CANCELLED) -> Hoàn lại tồn kho
+        if (newStatus == OrderStatus.CANCELLED) {
+            return cancelOrderInternal(order, "Huỷ bởi Admin/Hệ thống");
+        }
+
+        // ✅ LOGIC 2: Nếu Hoàn thành (COMPLETED/DELIVERED) -> Tăng số lượng đã bán (Sold Quantity)
+        // Chỉ tăng 1 lần khi chuyển sang trạng thái "thành công" đầu tiên
+        if ((newStatus == OrderStatus.DELIVERED || newStatus == OrderStatus.COMPLETED) &&
+                (oldStatus != OrderStatus.DELIVERED && oldStatus != OrderStatus.COMPLETED)) {
+
+            for (OrderDetail detail : order.getOrderDetails()) {
+                Car car = detail.getCar();
+                // Tăng số lượng đã bán
+                car.setSoldQuantity(car.getSoldQuantity() + detail.getQuantity());
+                carRepository.save(car);
+            }
+        }
+
+        order.setStatus(newStatus);
+        Order updatedOrder = orderRepository.save(order);
+        logger.info("Updated order {} status to {}", orderId, newStatus);
+        // ✅ GỬI EMAIL THÔNG BÁO CẬP NHẬT TRẠNG THÁI
+        try {
+            emailService.sendOrderStatusUpdate(updatedOrder);
+        } catch (Exception e) {
+            logger.error("Failed to send status update email", e);
+        }
+        return orderMapper.toOrderResponse(updatedOrder);
     }
 
+    // ==================== 3. HỦY ĐƠN HÀNG (User Cancel) ====================
     @Transactional
     public OrderResponse cancelOrder(String orderId, String cancelReason) {
-        try {
-            Order order = orderRepository.findById(orderId)
-                    .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
-            // Business rule: Only PENDING orders can be cancelled by the user
-            if (order.getStatus() != OrderStatus.PENDING) {
-                throw new AppException(ErrorCode.ORDER_CANNOT_BE_CANCELLED);
-            }
-
-            order.setStatus(OrderStatus.CANCELLED);
-            order.setCancelReason(cancelReason);
-            Order updatedOrder = orderRepository.save(order);
-
-            logger.info("User cancelled order {}. Reason: {}", orderId, cancelReason);
-            return orderMapper.toOrderResponse(updatedOrder);
-        } catch (AppException e) {
-            throw e; // Re-throw known exceptions
-        } catch (Exception e) {
-            logger.error("Error cancelling order: {}", e.getMessage(), e);
-            throw new AppException(ErrorCode.UNKNOWN);
+        // User chỉ được hủy khi đơn còn PENDING
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new AppException(ErrorCode.ORDER_CANNOT_BE_CANCELLED);
         }
+
+        // Nếu cancelReason null hoặc rỗng, gán mặc định
+        String finalReason = (cancelReason == null || cancelReason.trim().isEmpty())
+                ? "Khách hàng yêu cầu hủy (Không có lý do)"
+                : cancelReason;
+
+        return cancelOrderInternal(order, finalReason);
+    }
+
+    // Hàm nội bộ để xử lý logic hoàn kho khi hủy
+    private OrderResponse cancelOrderInternal(Order order, String reason) {
+        // ✅ LOGIC HOÀN KHO: Cộng lại số lượng vào kho
+        for (OrderDetail detail : order.getOrderDetails()) {
+            Car car = detail.getCar();
+            car.setQuantity(car.getQuantity() + detail.getQuantity());
+            car.updateStatusBasedOnQuantity(); // Cập nhật lại status xe (AVAILABLE) nếu cần
+            carRepository.save(car);
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+        order.setCancelReason(reason);
+        Order updatedOrder = orderRepository.save(order);
+        logger.info("Order {} cancelled. Reason: {}", order.getOrderId(), reason);
+        // 3. ✅ GỬI EMAIL THÔNG BÁO HỦY (Async)
+        try {
+            emailService.sendOrderCancellationEmail(updatedOrder);
+        } catch (Exception e) {
+            logger.error("Failed to send cancellation email for order {}", order.getOrderId(), e);
+            // Không throw exception để tránh rollback giao dịch hủy đơn chỉ vì lỗi gửi mail
+        }
+        return orderMapper.toOrderResponse(updatedOrder);
     }
 
     @Transactional

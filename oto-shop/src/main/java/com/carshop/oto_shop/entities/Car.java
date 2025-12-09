@@ -7,7 +7,7 @@ import com.carshop.oto_shop.enums.Color;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
-import java.util.Random;
+import java.util.*;
 
 @Entity
 @Table(name = "cars")
@@ -40,28 +40,68 @@ public class Car {
     @Column(name = "description")
     private String description;
 
+    // --- 1. LOGIC TỒN KHO ---
+    @Column(name = "quantity", nullable = false)
+    private Integer quantity = 0; // Số lượng tồn
+
+    @Column(name = "sold_quantity", nullable = false)
+    private Integer soldQuantity = 0; // Số lượng đã bán
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20)
     private CarStatus status;
 
-    @Column(name = "image_url", length = 255)
-    private String imageUrl;
+    // --- 2. LOGIC NHIỀU MÀU SẮC ---
+    // Tạo bảng phụ car_colors lưu danh sách màu
+    @ElementCollection(targetClass = Color.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "car_colors", joinColumns = @JoinColumn(name = "car_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "color")
+    private Set<Color> colors = new HashSet<>();
+
+    // --- 3. QUAN HỆ VỚI ẢNH (1-N) ---
+    // Xoá cột imageUrl cũ đi, dùng list này thay thế
+    @OneToMany(mappedBy = "car", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CarImage> images = new ArrayList<>();
+
+    // --- 4. QUAN HỆ VỚI CHI TIẾT XE (1-1 Bidirectional) ---
+    // mappedBy trỏ tới biến 'car' trong class CarDetail
+    @OneToOne(mappedBy = "car", cascade = CascadeType.ALL, orphanRemoval = true)
+    private CarDetail carDetail;
 
     @PrePersist
     public void generateAuto(){
-        if(this.status == null){
+        if (this.carId == null) {
+            this.carId = 100000L + new Random().nextLong(900000);
+        }
+        updateStatusBasedOnQuantity();
+    }
+
+    @PreUpdate
+    public void updateStatusBasedOnQuantity() {
+        if (this.quantity != null && this.quantity <= 0) {
+            this.status = CarStatus.SOLD; // Hoặc thêm ENUM: OUT_OF_STOCK
+        } else {
             this.status = CarStatus.AVAILABLE;
         }
-        if(this.carId == null){
-            Random random = new Random();
-            this.carId = 100000L + random.nextLong(900000);
+    }
+
+    // Helper method để thêm ảnh dễ dàng
+    public void addImage(CarImage image) {
+        images.add(image);
+        image.setCar(this);
+    }
+
+    // Helper method để set detail (quan trọng cho Cascade)
+    public void setCarDetailInfo(CarDetail carDetail) {
+        this.carDetail = carDetail;
+        if(carDetail != null) {
+            carDetail.setCar(this);
         }
     }
 
     public Car() {
     }
-
-    // Getters and Setters
 
     public Long getCarId() {
         return carId;
@@ -127,6 +167,22 @@ public class Car {
         this.description = description;
     }
 
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public Integer getSoldQuantity() {
+        return soldQuantity;
+    }
+
+    public void setSoldQuantity(Integer soldQuantity) {
+        this.soldQuantity = soldQuantity;
+    }
+
     public CarStatus getStatus() {
         return status;
     }
@@ -135,11 +191,27 @@ public class Car {
         this.status = status;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
+    public Set<Color> getColors() {
+        return colors;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setColors(Set<Color> colors) {
+        this.colors = colors;
+    }
+
+    public List<CarImage> getImages() {
+        return images;
+    }
+
+    public void setImages(List<CarImage> images) {
+        this.images = images;
+    }
+
+    public CarDetail getCarDetail() {
+        return carDetail;
+    }
+
+    public void setCarDetail(CarDetail carDetail) {
+        this.carDetail = carDetail;
     }
 }

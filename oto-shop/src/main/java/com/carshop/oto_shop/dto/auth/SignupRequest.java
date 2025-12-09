@@ -1,11 +1,15 @@
 package com.carshop.oto_shop.dto.auth;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public class SignupRequest {
-    @NotBlank(message = "Username không được để trống")
-    private String username;
+    // Đã xóa username
+
+    @NotBlank(message = "Email không được để trống")
+    @Email(message = "Email không đúng định dạng")
+    private String email;
 
     @NotBlank(message = "Password không được để trống")
     @Size(min = 6, max = 50, message = "Password phải có độ dài từ 6-50 ký tự")
@@ -18,18 +22,18 @@ public class SignupRequest {
     public SignupRequest() {
     }
 
-    public SignupRequest(String username, String password, String fullName) {
-        this.username = username;
+    public SignupRequest(String email, String password, String fullName) {
+        this.email = email;
         this.password = password;
         this.fullName = fullName;
     }
 
-    public String getUsername() {
-        return username;
+    public String getEmail() {
+        return email;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getPassword() {

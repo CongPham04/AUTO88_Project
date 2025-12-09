@@ -3,10 +3,9 @@ package com.carshop.oto_shop.controllers;
 import com.carshop.oto_shop.common.exceptions.AppException;
 import com.carshop.oto_shop.common.exceptions.ErrorCode;
 import com.carshop.oto_shop.common.response.ApiResponse;
-import com.carshop.oto_shop.dto.user.UserAccountRequest;
-import com.carshop.oto_shop.dto.user.UserResponse;
-import com.carshop.oto_shop.dto.user.UserRequest;
-import com.carshop.oto_shop.dto.user.UserUpdateRequest;
+import com.carshop.oto_shop.dto.user.*;
+import com.carshop.oto_shop.enums.AccountStatus;
+import com.carshop.oto_shop.enums.Role;
 import com.carshop.oto_shop.services.CarService;
 import com.carshop.oto_shop.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -117,10 +116,30 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách người dùng thành công!", dataUsers));
     }
 
-    @Operation(summary = "Get user by username", description = "API get user by username from account")
-    @GetMapping("/username/{username}")
-    public ResponseEntity<ApiResponse<UserResponse>> getUserByUsername(@PathVariable("username") String username) {
-        UserResponse dataUser = userService.getUserByUsername(username);
+    @Operation(summary = "Get user by email", description = "API get user by email from account")
+    @GetMapping("/email/{email}")
+    public ResponseEntity<ApiResponse<UserResponse>> getUserByEmail(@PathVariable("email") String email) {
+        UserResponse dataUser = userService.getUserByEmail(email);
         return ResponseEntity.ok(ApiResponse.success("Lấy thông tin người dùng thành công!", dataUser));
+    }
+
+    // ================== 1. TÌM KIẾM & LỌC (ADMIN) ==================
+    @Operation(summary = "Search & Filter Users", description = "Tìm kiếm người dùng theo từ khóa (tên, email, sđt) và lọc theo Role, Status. Chỉ dành cho Admin.")
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<UserResponse>>> searchUsers(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Role role,
+            @RequestParam(required = false) AccountStatus status
+    ) {
+        List<UserResponse> users = userService.searchUsers(keyword, role, status);
+        return ResponseEntity.ok(ApiResponse.success("Tìm kiếm thành công!", users));
+    }
+
+    // ================== 2. ĐỔI MẬT KHẨU (USER) ==================
+    @Operation(summary = "Change Password", description = "Cho phép người dùng tự đổi mật khẩu.")
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        userService.changePassword(request);
+        return ResponseEntity.ok(ApiResponse.success("Đổi mật khẩu thành công!"));
     }
 }

@@ -27,11 +27,11 @@ export const adminMenu: AdminMenuItem[] = [
     label: "Quản Lý Người Dùng",
     icon: Users,
   },
-  {
-    path: "/admin/promotions",
-    label: "Quản Lý Khuyến Mãi",
-    icon: Tag,
-  },
+  // {
+  //   path: "/admin/promotions",
+  //   label: "Quản Lý Khuyến Mãi",
+  //   icon: Tag,
+  // },
   {
     path: "/admin/news",
     label: "Quản Lý Tin Tức",

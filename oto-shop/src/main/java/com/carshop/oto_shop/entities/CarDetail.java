@@ -8,8 +8,8 @@ import java.util.Random;
 @Table(
         name = "car_details",
         uniqueConstraints = {
-        @UniqueConstraint(name = "uk_car_details_car_id", columnNames = "car_id")
-}
+                @UniqueConstraint(name = "uk_car_details_car_id", columnNames = "car_id")
+        }
 )
 public class CarDetail {
     @Id

@@ -1,977 +1,402 @@
-import { useState, useEffect } from 'react';
-import { Plus, Eye, Edit, Trash2, X, Settings } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Plus, Eye, Edit, Trash2, Search, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
-import carService, { CarResponse, CarRequest, CarDetailResponse, CarDetailRequest, Brand, Category, CarStatus, Color } from '@/services/carService';
 import { toast } from 'sonner';
+import carService, { CarResponse, Brand, Category } from '@/services/carService';
+import searchService from '@/services/searchService';
 
-const formatPrice = (price: number) => {
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND'
-  }).format(price);
-};
+const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
-const getBrandText = (brand: Brand) => {
-  const brandNames: Record<Brand, string> = {
-    TOYOTA: 'Toyota',
-    HYUNDAI: 'Hyundai',
-    MERCEDES: 'Mercedes',
-    VINFAST: 'VinFast',
-  };
-  return brandNames[brand];
-};
-
-const getCategoryText = (category: Category) => {
-  const categoryNames: Record<Category, string> = {
-    SUV: 'SUV',
-    SEDAN: 'Sedan',
-    HATCHBACK: 'Hatchback',
-  };
-  return categoryNames[category];
-};
-
-const getStatusText = (status: CarStatus) => {
-  return status === 'AVAILABLE' ? 'Còn hàng' : 'Đã bán';
-};
+const CarTableSkeleton = () => (
+  <>
+    {[...Array(10)].map((_, i) => (
+      <tr key={i} className="border-b">
+        <td className="p-4"><Skeleton className="h-10 w-14 rounded" /></td>
+        <td className="p-4 space-y-1"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-20" /></td>
+        <td className="p-4"><Skeleton className="h-4 w-24" /></td>
+        <td className="p-4"><Skeleton className="h-4 w-16" /></td>
+        <td className="p-4"><Skeleton className="h-6 w-20 rounded-full" /></td>
+        <td className="p-4"><div className="flex gap-2 justify-center"><Skeleton className="h-8 w-8" /><Skeleton className="h-8 w-8" /></div></td>
+      </tr>
+    ))}
+  </>
+);
 
 export default function AdminCars() {
-  const [cars, setCars] = useState<CarResponse[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [selectedCar, setSelectedCar] = useState<CarResponse | null>(null);
-  const [selectedFileName, setSelectedFileName] = useState('Chưa chọn ảnh');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>('');
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Car Detail states
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
-  const [isDetailEditing, setIsDetailEditing] = useState<boolean>(false);
-  const [currentCarDetail, setCurrentCarDetail] = useState<CarDetailResponse | null>(null);
-  const [loadingDetail, setLoadingDetail] = useState<boolean>(false);
+  // Lấy giá trị filter từ URL
+  const initialKeyword = searchParams.get('keyword') || '';
+  const initialBrand = searchParams.get('brand') || 'ALL';
+  const initialCategory = searchParams.get('category') || 'ALL';
+  const initialYear = searchParams.get('year') || '';
+  const initialPage = parseInt(searchParams.get('page') || '0', 10); // ✅ Lấy trang hiện tại từ URL
+
+  const [cars, setCars] = useState<CarResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Pagination State ✅
+  const [page, setPage] = useState(initialPage);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const pageSize = 10; // ✅ Cố định 10 sản phẩm/trang
+
+  // Filter States
+  const [keyword, setKeyword] = useState(initialKeyword);
+  const [brand, setBrand] = useState<string>(initialBrand);
+  const [category, setCategory] = useState<string>(initialCategory);
+  const [year, setYear] = useState<string>(initialYear);
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedCar, setSelectedCar] = useState<CarResponse | null>(null);
 
-  const [formData, setFormData] = useState<CarRequest>({
-    brand: Brand.TOYOTA,
-    category: Category.SUV,
-    model: '',
-    manufactureYear: new Date().getFullYear(),
-    price: 0,
-    color: Color.BLACK,
-    description: '',
-    status: 'AVAILABLE',
-  });
-
-  const [detailFormData, setDetailFormData] = useState<CarDetailRequest>({
-    engine: '',
-    horsepower: 0,
-    torque: 0,
-    transmission: '',
-    fuelType: '',
-    fuelConsumption: 0,
-    seats: 0,
-    weight: 0,
-    dimensions: '',
-  });
-
-  useEffect(() => {
-    fetchCars();
-  }, []);
-
-  const fetchCars = async () => {
+  // --- HÀM TÌM KIẾM CHÍNH (GỌI BACKEND) ---
+  const fetchCars = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await carService.getAllCars();
-      setCars(data);
-    } catch (error: any) {
-      console.error('Error fetching cars:', error);
-      toast.error(error.message || 'Lỗi khi tải danh sách xe');
+
+      const params: any = {
+        page: initialPage, // ✅ Thêm tham số page
+        size: pageSize     // ✅ Thêm tham số size
+      };
+
+      if (initialKeyword) params.keyword = initialKeyword;
+      if (initialBrand && initialBrand !== 'ALL') params.brand = initialBrand;
+      if (initialCategory && initialCategory !== 'ALL') params.category = initialCategory;
+      if (initialYear) params.yearFrom = Number(initialYear);
+
+      // Gọi API Search (Backend cần hỗ trợ trả về Page<Car> hoặc wrapper có totalPages)
+      // Giả sử searchService.searchCars trả về { content: [], totalPages: number, totalElements: number }
+      // Nếu API hiện tại chỉ trả về List[], bạn cần update API hoặc client logic.
+      // Dưới đây giả định API trả về mảng -> Client side pagination (Tạm thời) HOẶC API đã chuẩn.
+      
+      // ⚠️ CHÚ Ý: Nếu API backend chưa hỗ trợ phân trang server-side cho hàm search,
+      // ta có thể fake phân trang client-side như sau (nếu data ít):
+      
+      const response: any = await searchService.searchCars(params);
+      
+      // *LOGIC ADAPTER*: Kiểm tra xem API trả về List hay Page Object
+      if (Array.isArray(response)) {
+        // Nếu API trả về mảng (chưa phân trang server), ta phân trang ở client tạm thời
+        const allCars = response;
+        setTotalElements(allCars.length);
+        setTotalPages(Math.ceil(allCars.length / pageSize));
+        const startIndex = initialPage * pageSize;
+        setCars(allCars.slice(startIndex, startIndex + pageSize));
+      } else if (response.content) {
+         // Nếu API chuẩn trả về Page object
+        setCars(response.content);
+        setTotalPages(response.totalPages);
+        setTotalElements(response.totalElements);
+      } else {
+        setCars([]); // Fallback
+      }
+
+    } catch (error) {
+      toast.error('Lỗi tải danh sách xe');
+      console.error(error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [initialKeyword, initialBrand, initialCategory, initialYear, initialPage]);
 
-  const handleOpenCreateModal = () => {
-    setIsEditing(false);
-    setSelectedCar(null);
-    setFormData({
-      brand: Brand.TOYOTA,
-      category: Category.SUV,
-      model: '',
-      manufactureYear: new Date().getFullYear(),
-      price: 0,
-      color: Color.BLACK,
-      description: '',
-      status: 'AVAILABLE',
-    });
-    setImageFile(null);
-    setImagePreview('');
-    setSelectedFileName('Chưa chọn ảnh');
-    setIsModalOpen(true);
-  };
+  // Gọi fetch khi URL params thay đổi
+  useEffect(() => { fetchCars(); }, [fetchCars]);
 
-  const handleOpenEditModal = (car: CarResponse) => {
-    setIsEditing(true);
-    setSelectedCar(car);
-    setFormData({
-      brand: car.brand,
-      category: car.category,
-      model: car.model,
-      manufactureYear: car.manufactureYear,
-      price: car.price,
-      color: car.color,
-      description: car.description,
-      status: car.status,
-    });
-    setImageFile(null);
-    setImagePreview(car.imageUrl || '');
-    setSelectedFileName('Chưa chọn ảnh mới');
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedCar(null);
-    setImageFile(null);
-    setImagePreview('');
-    setSelectedFileName('Chưa chọn ảnh');
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const preview = URL.createObjectURL(file);
-      setImagePreview(preview);
-      const fullName = file.name;
-      const truncatedName = fullName.length > 20 ? '...' + fullName.substring(fullName.length - 20) : fullName;
-      setSelectedFileName(truncatedName);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Validation
-    if (!formData.model.trim()) {
-      toast.error('Vui lòng nhập tên mẫu xe');
-      return;
-    }
-    if (formData.price <= 0) {
-      toast.error('Vui lòng nhập giá xe hợp lệ');
-      return;
-    }
-
-    if (!isEditing && !imageFile) {
-      toast.error('Vui lòng chọn ảnh cho xe');
-      return;
-    }
-
-    try {
-      setIsSaving(true);
-
-      const carData: CarRequest = {
-        ...formData,
-        imageFile: imageFile || undefined,
-      };
-
-      if (isEditing && selectedCar) {
-        await carService.updateCar(selectedCar.carId, carData);
-        toast.success('Cập nhật xe thành công');
-      } else {
-        await carService.createCar(carData);
-        toast.success('Thêm xe mới thành công');
-      }
-
-      handleCloseModal();
-      await fetchCars();
-    } catch (error: any) {
-      console.error('Error saving car:', error);
-      toast.error(error.message || 'Lỗi khi lưu thông tin xe');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleDelete = (carId: number, carModel: string) => {
-    toast.custom((t) => (
-      <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 w-[340px]">
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">
-          Xác nhận xóa xe
-        </h3>
-        <p className="text-gray-600 text-sm mb-5">
-          Bạn có chắc chắn muốn xóa xe <span className="font-medium text-red-600">"{carModel}"</span> không?<br />
-          Hành động này không thể hoàn tác.
-        </p>
-        <div className="flex justify-end space-x-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => toast.dismiss(t)}
-            className="cursor-pointer hover:bg-gray-100 transition-colors"
-          >
-            Hủy
-          </Button>
-          <Button
-            size="sm"
-            className="bg-red-600 hover:bg-red-700 text-white cursor-pointer transition-colors"
-            onClick={async () => {
-              try {
-                await carService.deleteCar(carId);
-                toast.dismiss(t);
-                toast.success(`Đã xóa xe "${carModel}" thành công`);
-                await fetchCars();
-              } catch (error: any) {
-                console.error('Error deleting car:', error);
-                toast.dismiss(t);
-                toast.error(error.message || 'Lỗi khi xóa xe');
-              }
-            }}
-          >
-            Xác nhận
-          </Button>
-        </div>
-      </div>
-    ));
-  };
-
-  // Car Detail handlers
-  const handleOpenDetailModal = async (car: CarResponse) => {
-    setSelectedCar(car);
-    setLoadingDetail(true);
-    setIsDetailModalOpen(true);
-
-    try {
-      // Try to fetch existing car details
-      const allDetails = await carService.getAllCarDetails();
-      const existingDetail = allDetails.find((detail) => detail.carId === car.carId);
-
-      if (existingDetail) {
-        // Car detail exists - edit mode
-        setIsDetailEditing(true);
-        setCurrentCarDetail(existingDetail);
-        setDetailFormData({
-          engine: existingDetail.engine,
-          horsepower: existingDetail.horsepower,
-          torque: existingDetail.torque,
-          transmission: existingDetail.transmission,
-          fuelType: existingDetail.fuelType,
-          fuelConsumption: existingDetail.fuelConsumption,
-          seats: existingDetail.seats,
-          weight: existingDetail.weight,
-          dimensions: existingDetail.dimensions,
-        });
-      } else {
-        // No car detail - create mode
-        setIsDetailEditing(false);
-        setCurrentCarDetail(null);
-        setDetailFormData({
-          engine: '',
-          horsepower: 0,
-          torque: 0,
-          transmission: '',
-          fuelType: '',
-          fuelConsumption: 0,
-          seats: 0,
-          weight: 0,
-          dimensions: '',
-        });
-      }
-    } catch (error: any) {
-      console.error('Error fetching car details:', error);
-      // If error, assume no detail exists and allow creation
-      setIsDetailEditing(false);
-      setCurrentCarDetail(null);
-      setDetailFormData({
-        engine: '',
-        horsepower: 0,
-        torque: 0,
-        transmission: '',
-        fuelType: '',
-        fuelConsumption: 0,
-        seats: 0,
-        weight: 0,
-        dimensions: '',
+  // --- HANDLERS CẬP NHẬT URL PARAMS ---
+  const updateSearchParams = (newParams: Record<string, string | undefined>) => {
+    setSearchParams(prev => {
+      const params = new URLSearchParams(prev);
+      Object.entries(newParams).forEach(([key, value]) => {
+        if (value && value !== 'ALL') {
+          params.set(key, value);
+        } else {
+          params.delete(key);
+        }
       });
-    } finally {
-      setLoadingDetail(false);
+      return params;
+    });
+  };
+
+  const handleSearch = () => {
+    setPage(0); // Reset về trang 1 khi tìm kiếm
+    updateSearchParams({ keyword: keyword.trim(), page: '0' });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter') handleSearch(); };
+
+  const handleBrandChange = (value: string) => {
+    setBrand(value);
+    setPage(0);
+    updateSearchParams({ brand: value, page: '0' });
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setCategory(value);
+    setPage(0);
+    updateSearchParams({ category: value, page: '0' });
+  };
+
+  const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setYear(e.target.value);
+  };
+
+  const handleYearBlur = () => {
+    setPage(0);
+    updateSearchParams({ year: year, page: '0' });
+  };
+
+  const clearFilters = () => {
+    setKeyword(''); setBrand('ALL'); setCategory('ALL'); setYear(''); setPage(0);
+    setSearchParams({}); // Xoá hết params -> Về mặc định
+  };
+
+  // ✅ Xử lý chuyển trang
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 0 && newPage < totalPages) {
+      setPage(newPage);
+      updateSearchParams({ page: newPage.toString() });
+      window.scrollTo({ top: 0, behavior: 'smooth' }); // Cuộn lên đầu
     }
   };
 
-  const handleCloseDetailModal = () => {
-    setIsDetailModalOpen(false);
-    setSelectedCar(null);
-    setCurrentCarDetail(null);
-    setIsDetailEditing(false);
-  };
+  const handleDeleteConfirm = (car: CarResponse) => { setSelectedCar(car); setIsDeleteDialogOpen(true); };
 
-  const handleSubmitCarDetail = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!selectedCar) {
-      toast.error('Không tìm thấy thông tin xe');
-      return;
-    }
-
-    // Validation
-    if (!detailFormData.engine.trim()) {
-      toast.error('Vui lòng nhập thông tin động cơ');
-      return;
-    }
-    if (!detailFormData.transmission.trim()) {
-      toast.error('Vui lòng nhập thông tin hộp số');
-      return;
-    }
-    if (!detailFormData.fuelType.trim()) {
-      toast.error('Vui lòng nhập loại nhiên liệu');
-      return;
-    }
-
+  const handleDelete = async () => {
+    if (!selectedCar) return;
     try {
-      setIsSaving(true);
-
-      if (isDetailEditing && currentCarDetail) {
-        // Update existing car detail
-        await carService.updateCarDetail(currentCarDetail.carDetailId, detailFormData);
-        toast.success('Cập nhật thông số kỹ thuật thành công');
-      } else {
-        // Create new car detail
-        await carService.createCarDetail(selectedCar.carId, detailFormData);
-        toast.success('Thêm thông số kỹ thuật thành công');
-      }
-
-      handleCloseDetailModal();
+      await carService.deleteCar(selectedCar.carId);
+      toast.success('Xóa xe thành công');
+      setIsDeleteDialogOpen(false);
+      fetchCars();
     } catch (error: any) {
-      console.error('Error saving car detail:', error);
-      toast.error(error.message || 'Lỗi khi lưu thông số kỹ thuật');
-    } finally {
-      setIsSaving(false);
+      toast.error(error.message || 'Lỗi xóa xe');
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải danh sách xe...</p>
-        </div>
-      </div>
-    );
-  }
-
+  const getStatusBadgeColor = (status: string) => status === 'AVAILABLE' ? 'bg-green-600' : 'bg-red-600';
+  const getStatusText = (status: string) => status === 'AVAILABLE' ? 'Còn hàng' : 'Đã bán';
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Quản Lý Xe</h2>
-        <Button
-          onClick={handleOpenCreateModal}
-          className="cursor-pointer hover:bg-red-700 transition-colors"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Thêm xe mới
-        </Button>
+    <div className="space-y-6 py-4 px-4 sm:px-6 lg:px-8">
+      {/* HEADER & TOOLBAR */}
+      <div className="">
+        <div className="flex flex-col gap-4">
+
+          {/* Top Row: Title + Add Button */}
+          <div className="flex justify-between items-center">
+            <h2 className="text-3xl font-bold text-gray-800 shrink-0">Quản Lý Xe</h2>
+            <Button onClick={() => navigate('/admin/cars/create')} className="bg-black hover:bg-gray-800 text-white">
+              <Plus className="w-4 h-4 mr-2" /> Nhập thêm xe mới
+            </Button>
+          </div>
+
+          {/* Bottom Row: Search & Filters */}
+          <div className="flex flex-col md:flex-row gap-3">
+            <div className="relative flex-1 min-w-[200px] border border-gray-300 rounded-md bg-white shadow-sm py-2.5">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Tìm tên xe, model..."
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="pl-10 h-9 w-full bg-gray-50 focus:bg-white transition-colors"
+              />
+            </div>
+
+            <Select value={brand} onValueChange={handleBrandChange}>
+              <SelectTrigger className="h-9 w-[110px] text-sm bg-gray-50 border border-gray-300 rounded-md bg-white shadow-sm px-3">
+                <div className="flex items-center truncate text-gray-600">
+                  <Filter className="w-3.5 h-3.5 mr-2 opacity-70" />
+                  <SelectValue placeholder="Hãng" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Tất cả hãng</SelectItem>
+                {Object.values(Brand).map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+              </SelectContent>
+            </Select>
+
+            <Select value={category} onValueChange={handleCategoryChange}>
+              <SelectTrigger className="h-9 w-[110px] text-sm bg-gray-50 border border-gray-300 rounded-md bg-white shadow-sm px-3">
+                <div className="flex items-center truncate text-gray-600">
+                  <Filter className="w-3.5 h-3.5 mr-2 opacity-70" />
+                  <SelectValue placeholder="Loại" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Tất cả loại</SelectItem>
+                {Object.values(Category).map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+
+            <Input
+              placeholder="Năm SX"
+              type="number"
+              value={year}
+              onChange={handleYearChange}
+              onBlur={handleYearBlur}
+              className="h-9 w-[110px] text-sm bg-gray-50 border border-gray-300 rounded-md bg-white shadow-sm px-3"
+            />
+
+            {(initialKeyword || initialBrand !== 'ALL' || initialCategory !== 'ALL' || initialYear) && (
+              <Button variant="ghost" onClick={clearFilters} className="h-10 px-3 text-red-500 hover:text-red-700 hover:bg-red-50">
+                <X className="w-4 h-4 mr-1" /> Xoá lọc
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
 
-      {cars.length === 0 ? (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <p className="text-gray-600">Chưa có xe nào trong hệ thống</p>
-            <Button
-              onClick={handleOpenCreateModal}
-              className="mt-4 cursor-pointer hover:bg-red-700 transition-colors"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Thêm xe đầu tiên
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="text-left p-4">Hình ảnh</th>
-                    <th className="text-left p-4">Tên xe</th>
-                    <th className="text-left p-4">Giá</th>
-                    <th className="text-left p-4">Năm sản xuất</th>
-                    <th className="text-left p-4">Màu sắc</th>
-                    <th className="text-left p-4">Trạng thái</th>
-                    <th className="text-left p-4">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cars.map((car) => (
-                    <tr key={car.carId} className="border-b hover:bg-gray-50 transition-colors">
-                      <td className="p-4">
-                        <ImageWithFallback
-                          src={car.imageUrl}
-                          alt={`${getBrandText(car.brand)} ${car.model}`}
-                          className="w-16 h-12 object-cover rounded"
-                        />
-                      </td>
-                      <td className="p-4">
-                        <div>
-                          <p className="font-medium">
-                            {getBrandText(car.brand)} {car.model}
-                          </p>
-                          <p className="text-sm text-gray-600">{getCategoryText(car.category)}</p>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <p className="font-medium text-red-600">{formatPrice(car.price)}</p>
-                      </td>
-                      <td className="p-4">
-                        <p className="text-gray-700">{car.manufactureYear}</p>
-                      </td>
-                      <td className="p-4">
-                        <p className="text-gray-700">{car.color}</p>
-                      </td>
-                      <td className="p-4">
-                        <Badge
-                          className={
-                            car.status === 'AVAILABLE' ? 'bg-green-600' : 'bg-red-600'
-                          }
-                        >
-                          {getStatusText(car.status)}
-                        </Badge>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleOpenDetailModal(car)}
-                            className="cursor-pointer hover:bg-blue-50 transition-colors"
-                            title="Quản lý thông số kỹ thuật"
-                          >
-                            <Settings className="w-4 h-4 text-blue-600" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleOpenEditModal(car)}
-                            className="cursor-pointer hover:bg-gray-100 transition-colors"
-                            title="Chỉnh sửa thông tin xe"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedCar(car);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                            className="text-red-600 hover:text-red-700"
-                            title="Xóa"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Car Detail Modal */}
-      {isDetailModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md rounded-2xl shadow-2xl border border-gray-100">
-            <CardHeader className="border-b pb-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-semibold text-gray-800">
-                    {isDetailEditing ? 'Chỉnh sửa thông số kỹ thuật' : 'Thêm thông số kỹ thuật'}
-                  </CardTitle>
-                  {selectedCar && (
-                    <div className="flex items-center gap-3 mt-2">
-                      <img
-                        src={selectedCar.imageUrl}
-                        alt={selectedCar.model}
-                        className="w-12 h-12 object-cover rounded border"
+      {/* Table */}
+      <Card className="overflow-hidden border-gray-100 shadow-sm">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="p-4 font-semibold text-gray-600">Hình ảnh</th>
+                  <th className="p-4 font-semibold text-gray-600">Tên xe / Hãng</th>
+                  <th className="p-4 font-semibold text-gray-600">Giá niêm yết</th>
+                  <th className="p-4 font-semibold text-gray-600">Năm SX</th>
+                  <th className="p-4 font-semibold text-gray-600">Tồn kho</th>
+                  <th className="p-4 font-semibold text-gray-600">Trạng thái</th>
+                  <th className="p-4 font-semibold text-gray-600 text-center">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? <CarTableSkeleton /> : cars.length === 0 ? (
+                  <tr><td colSpan={7} className="text-center py-12 text-gray-500">
+                    <div className="flex flex-col items-center gap-2">
+                      <Search className="w-8 h-8 text-gray-300" />
+                      <span>Không tìm thấy xe nào phù hợp với bộ lọc.</span>
+                    </div>
+                  </td></tr>
+                ) : cars.map((car) => (
+                  <tr key={car.carId} className="border-b hover:bg-gray-50/50 transition-colors">
+                    <td className="p-4">
+                      <ImageWithFallback
+                        src={car.imageUrls[0]}
+                        alt={car.model}
+                        className="w-16 h-12 object-cover rounded border bg-white"
                       />
-                      <div>
-                        <p className="font-medium text-gray-800">
-                          {getBrandText(selectedCar.brand)} {selectedCar.model}
-                        </p>
-                        <p className="text-sm text-gray-500">{getCategoryText(selectedCar.category)}</p>
+                    </td>
+                    <td className="p-4">
+                      <div className="font-bold text-gray-800">{car.model}</div>
+                      <div className="text-xs text-gray-500">{car.brand} - {car.category}</div>
+                    </td>
+                    <td className="p-4 text-red-600 font-semibold">
+                      {formatPrice(car.price)}
+                    </td>
+                    <td className="p-4 text-gray-600">
+                      {car.manufactureYear}
+                    </td>
+                    <td className="p-4">
+                      <span className="font-medium">{car.quantity}</span> chiếc
+                    </td>
+                    <td className="p-4">
+                      <Badge className={`${getStatusBadgeColor(car.status)} text-white shadow-none hover:opacity-90`}>
+                        {getStatusText(car.status)}
+                      </Badge>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex justify-center gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600" onClick={() => navigate(`/admin/cars/view/${car.carId}`)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-gray-100" onClick={() => navigate(`/admin/cars/edit/${car.carId}`)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleDeleteConfirm(car)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
-                    </div>
-                  )}
-                </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ✅ PAGINATION UI */}
+          {!loading && totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-4 border-t bg-gray-50">
+              <div className="text-xs text-gray-500 mt-2">
+                Hiển thị <strong>{cars.length}</strong> trên tổng số <strong>{totalElements}</strong> xe
+              </div>
+              <div className="flex gap-2 mt-2">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  onClick={handleCloseDetailModal}
-                  disabled={isSaving}
-                  className="cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 0}
+                  className="h-8 px-2 mt-2"
                 >
-                  <X className="w-4 h-4" />
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                
+                {/* Logic hiển thị số trang đơn giản */}
+                <div className="flex items-center gap-2 mt-2">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                     // Logic hiển thị trang thông minh hơn có thể implement sau
+                     // Ở đây hiển thị tối đa 5 trang đầu hoặc sliding window
+                     let p = i;
+                     if (totalPages > 5 && page > 2) p = page - 2 + i;
+                     if (p >= totalPages) return null;
+                     
+                     return (
+                      <Button
+                        key={p}
+                        variant={p === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(p)}
+                        className={`h-8 w-8 ${p === page ? "bg-black text-white pointer-events-none" : "hover:bg-gray-100"}`}
+                      >
+                        {p + 1}
+                      </Button>
+                    );
+                  })}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page >= totalPages - 1}
+                  className="h-8 px-2 mt-2"
+                >
+                  <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
-            </CardHeader>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-            <CardContent className="py-6">
-              {loadingDetail ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmitCarDetail} className="space-y-5">
-                  <div className="space-y-3">
-                    <Label htmlFor="engine">Động cơ *</Label>
-                    <Input
-                      id="engine"
-                      value={detailFormData.engine}
-                      onChange={(e) => setDetailFormData({ ...detailFormData, engine: e.target.value })}
-                      disabled={isSaving}
-                      placeholder="VD: 2.5L I4 DOHC"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="horsepower">Công suất (HP)</Label>
-                      <Input
-                        id="horsepower"
-                        type="number"
-                        value={detailFormData.horsepower}
-                        onChange={(e) =>
-                          setDetailFormData({
-                            ...detailFormData,
-                            horsepower: parseInt(e.target.value) || 0,
-                          })
-                        }
-                        disabled={isSaving}
-                        placeholder="VD: 200"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="torque">Mô-men xoắn (Nm)</Label>
-                      <Input
-                        id="torque"
-                        type="number"
-                        value={detailFormData.torque}
-                        onChange={(e) =>
-                          setDetailFormData({
-                            ...detailFormData,
-                            torque: parseInt(e.target.value) || 0,
-                          })
-                        }
-                        disabled={isSaving}
-                        placeholder="VD: 250"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label htmlFor="transmission">Hộp số *</Label>
-                    <Input
-                      id="transmission"
-                      value={detailFormData.transmission}
-                      onChange={(e) =>
-                        setDetailFormData({ ...detailFormData, transmission: e.target.value })
-                      }
-                      disabled={isSaving}
-                      placeholder="VD: Tự động 8 cấp"
-                    />
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label htmlFor="fuelType">Loại nhiên liệu *</Label>
-                    <Input
-                      id="fuelType"
-                      value={detailFormData.fuelType}
-                      onChange={(e) =>
-                        setDetailFormData({ ...detailFormData, fuelType: e.target.value })
-                      }
-                      disabled={isSaving}
-                      placeholder="VD: Xăng, Dầu, Hybrid"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="fuelConsumption">Mức tiêu thụ (L/100km)</Label>
-                      <Input
-                        id="fuelConsumption"
-                        type="number"
-                        step="0.1"
-                        value={detailFormData.fuelConsumption}
-                        onChange={(e) =>
-                          setDetailFormData({
-                            ...detailFormData,
-                            fuelConsumption: parseFloat(e.target.value) || 0,
-                          })
-                        }
-                        disabled={isSaving}
-                        placeholder="VD: 7.5"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="seats">Số chỗ ngồi</Label>
-                      <Input
-                        id="seats"
-                        type="number"
-                        value={detailFormData.seats}
-                        onChange={(e) =>
-                          setDetailFormData({
-                            ...detailFormData,
-                            seats: parseInt(e.target.value) || 0,
-                          })
-                        }
-                        disabled={isSaving}
-                        placeholder="VD: 5, 7"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="weight">Trọng lượng (kg)</Label>
-                      <Input
-                        id="weight"
-                        type="number"
-                        value={detailFormData.weight}
-                        onChange={(e) =>
-                          setDetailFormData({
-                            ...detailFormData,
-                            weight: parseFloat(e.target.value) || 0,
-                          })
-                        }
-                        disabled={isSaving}
-                        placeholder="VD: 1500"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="dimensions">Kích thước (DxRxC mm)</Label>
-                      <Input
-                        id="dimensions"
-                        value={detailFormData.dimensions}
-                        onChange={(e) =>
-                          setDetailFormData({ ...detailFormData, dimensions: e.target.value })
-                        }
-                        disabled={isSaving}
-                        placeholder="VD: 4650 x 1825 x 1665"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end space-x-3 mt-4 pt-4 border-t">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleCloseDetailModal}
-                      disabled={isSaving}
-                      className="cursor-pointer hover:bg-gray-100 transition-colors"
-                    >
-                      Hủy
-                    </Button>
-                    <Button
-                      type="submit"
-                      variant={'default'}
-                      disabled={isSaving}
-                    >
-                      {isSaving ? 'Đang lưu...' : isDetailEditing ? 'Cập nhật' : 'Thêm thông số'}
-                    </Button>
-                  </div>
-                </form>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Create/Edit Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md rounded-3xl overflow-hidden shadow-xl border border-gray-200 bg-white">
-            <CardHeader className="border-b pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle>{isEditing ? 'Chỉnh sửa xe' : 'Thêm xe mới'}</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleCloseModal}
-                  disabled={isSaving}
-                  className="cursor-pointer hover:bg-gray-100 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="brand" className="mb-2">
-                      Hãng xe *
-                    </Label>
-                    <Select
-                      value={formData.brand}
-                      onValueChange={(value: Brand) =>
-                        setFormData({ ...formData, brand: value })
-                      }
-                      disabled={isSaving}
-                    >
-                      <SelectTrigger>
-                        <SelectValue>{getBrandText(formData.brand)}</SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="TOYOTA">Toyota</SelectItem>
-                        <SelectItem value="HYUNDAI">Hyundai</SelectItem>
-                        <SelectItem value="MERCEDES">Mercedes</SelectItem>
-                        <SelectItem value="VINFAST">VinFast</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="category" className="mb-2">
-                      Loại xe *
-                    </Label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(value: Category) =>
-                        setFormData({ ...formData, category: value })
-                      }
-                      disabled={isSaving}
-                    >
-                      <SelectTrigger>
-                        <SelectValue>{getCategoryText(formData.category)}</SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="SUV">SUV</SelectItem>
-                        <SelectItem value="SEDAN">Sedan</SelectItem>
-                        <SelectItem value="HATCHBACK">Hatchback</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="model" className="mb-2">
-                      Tên mẫu xe *
-                    </Label>
-                    <Input
-                      id="model"
-                      value={formData.model}
-                      onChange={(e) =>
-                        setFormData({ ...formData, model: e.target.value })
-                      }
-                      disabled={isSaving}
-                      placeholder="Ví dụ: Camry, Tucson, C300"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="manufactureYear" className="mb-2">
-                      Năm sản xuất *
-                    </Label>
-                    <Input
-                      id="manufactureYear"
-                      type="number"
-                      value={formData.manufactureYear}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          manufactureYear: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      disabled={isSaving}
-                      min="1900"
-                      max={new Date().getFullYear() + 1}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="price" className="mb-2">
-                      Giá (VND) *
-                    </Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      value={formData.price}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          price: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      disabled={isSaving}
-                      min="0"
-                      placeholder="Ví dụ: 850000000"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="color" className="mb-2">
-                      Màu sắc *
-                    </Label>
-                    <Select
-                      value={formData.color}
-                      onValueChange={(value: Color) =>
-                        setFormData({ ...formData, color: value })
-                      }
-                      disabled={isSaving}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Chọn màu sắc" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.values(Color).map((colorValue) => (
-                          <SelectItem key={colorValue} value={colorValue}>
-                            {colorValue}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="status" className="mb-2">
-                      Trạng thái *
-                    </Label>
-                    <Select
-                      value={formData.status}
-                      onValueChange={(value: CarStatus) =>
-                        setFormData({ ...formData, status: value })
-                      }
-                      disabled={isSaving}
-                    >
-                      <SelectTrigger>
-                        <SelectValue>{getStatusText(formData.status)}</SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="AVAILABLE">Còn hàng</SelectItem>
-                        <SelectItem value="SOLD">Đã bán</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="imageFile" className="mb-2">
-                      Hình ảnh {!isEditing && '*'}
-                    </Label>
-                    <div className="space-y-2">
-                      <Input
-                        id="imageFile"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        disabled={isSaving}
-                        className="cursor-pointer"
-                      />
-                      <p className="text-sm text-gray-600">{selectedFileName}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="description" className="mb-2">
-                    Mô tả
-                  </Label>
-                  <textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    disabled={isSaving}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="Mô tả chi tiết về xe..."
-                  />
-                </div>
-
-                {imagePreview && (
-                  <div>
-                    <Label className="mb-2">Xem trước hình ảnh</Label>
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-full max-h-64 object-contain rounded border"
-                    />
-                  </div>
-                )}
-
-                <div className="flex justify-end space-x-4 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCloseModal}
-                    disabled={isSaving}
-                    className="cursor-pointer hover:bg-gray-100 transition-colors"
-                  >
-                    Hủy
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isSaving}
-                    className="cursor-pointer hover:bg-red-700 transition-colors"
-                  >
-                    {isSaving ? 'Đang lưu...' : isEditing ? 'Cập nhật' : 'Thêm xe'}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-      {/* === Modal xác nhận xóa xe === */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              Bạn có chắc chắn muốn xóa xe?
-            </AlertDialogTitle>
+            <AlertDialogTitle>Xác nhận xóa xe?</AlertDialogTitle>
             <AlertDialogDescription>
-              Hành động này không thể hoàn tác. Xe này sẽ bị xóa vĩnh viễn khỏi hệ thống.
+              Bạn có chắc chắn muốn xóa xe <span className="font-bold">{selectedCar?.model}</span>?
+              <br />Hành động này sẽ xóa toàn bộ dữ liệu liên quan.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
-              Hủy
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                if (selectedCar) {
-                  try {
-                    await carService.deleteCar(selectedCar.carId);
-                    toast.success(`Đã xóa xe "${selectedCar.model}" thành công.`);
-                    await fetchCars(); // load lại danh sách
-                  } catch (error: any) {
-                    toast.error(error.message || 'Lỗi khi xóa xe.');
-                  } finally {
-                    setIsDeleteDialogOpen(false);
-                    setSelectedCar(null);
-                  }
-                }
-              }}
-              className="bg-black hover:bg-gray-800 text-white"
-            >
-              Xóa
-            </AlertDialogAction>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white">Xóa vĩnh viễn</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

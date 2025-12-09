@@ -11,7 +11,8 @@ class SearchService {
     yearFrom?: number;
     yearTo?: number;
   }) {
-    const response = await apiClient.get('/search/cars', { params });
+    // ✅ URL mới: /cars/search
+    const response = await apiClient.get('/cars/search', { params });
     return response.data;
   }
 }
