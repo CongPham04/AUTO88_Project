@@ -238,11 +238,11 @@ export default function UserProfile() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2"><Label>Họ và tên</Label><Input value={profileData.fullName} onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })} disabled={!isEditing} required placeholder="VD: Nguyễn Văn A" /></div>
                       <div className="space-y-2"><Label>Email<span className="text-red-500">*</span></Label><Input value={profileData.email} disabled className="bg-gray-100 cursor-not-allowed" /></div>
-                      <div className="space-y-2"><Label>Số điện thoại<span className="text-red-500">*</span></Label><Input value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} disabled={!isEditing} required placeholder="VD: 09xx xxx xxx" /></div>
+                      <div className="space-y-2"><Label>Số điện thoại</Label><Input value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} disabled={!isEditing} required placeholder="VD: 09xx xxx xxx" /></div>
                       <div className="space-y-2"><Label>Ngày sinh</Label><Input type="date" value={profileData.dob} onChange={(e) => setProfileData({ ...profileData, dob: e.target.value })} disabled={!isEditing} /></div>
 
                       <div className="space-y-2">
-                        <Label>Giới tính <span className="text-red-500">*</span></Label>
+                        <Label>Giới tính</Label>
                         <RadioGroup value={profileData.gender} onValueChange={(value) => setProfileData({ ...profileData, gender: value as Gender })} disabled={!isEditing} className="flex space-x-4 mt-2">
                           <div className="flex items-center space-x-2"><RadioGroupItem value="MALE" id="g-male" /><Label htmlFor="g-male">Nam</Label></div>
                           <div className="flex items-center space-x-2"><RadioGroupItem value="FEMALE" id="g-female" /><Label htmlFor="g-female">Nữ</Label></div>

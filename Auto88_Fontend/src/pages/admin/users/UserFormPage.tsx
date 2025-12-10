@@ -226,17 +226,17 @@ export default function UserFormPage({ mode }: UserFormPageProps) {
                             <CardHeader><CardTitle className="text-lg">Thông tin cá nhân</CardTitle></CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label>Họ và tên <span className="text-red-500">*</span></Label>
+                                    <Label>Họ và tên</Label>
                                     <Input value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} placeholder='Nguyễn Văn A'/>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label>Số điện thoại <span className="text-red-500">*</span></Label>
+                                        <Label>Số điện thoại</Label>
                                         <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder='0987241231'/>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>Ngày sinh <span className="text-red-500">*</span></Label>
+                                        <Label>Ngày sinh</Label>
                                         <Input type="date" value={formData.dob} onChange={(e) => setFormData({ ...formData, dob: e.target.value })} />
                                     </div>
                                 </div>

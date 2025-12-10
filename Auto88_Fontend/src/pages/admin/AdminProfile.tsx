@@ -234,7 +234,7 @@ export default function AdminProfile() {
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="fullName" className="mb-2">Họ và tên <span className='text-red-600'>*</span> </Label>
+                    <Label htmlFor="fullName" className="mb-2">Họ và tên</Label>
                     <Input
                       id="fullName"
                       value={profileData.fullName}
@@ -253,7 +253,7 @@ export default function AdminProfile() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="phone" className="mb-2">Số điện thoại <span className='text-red-600'>*</span> </Label>
+                    <Label htmlFor="phone" className="mb-2">Số điện thoại</Label>
                     <Input
                       id="phone"
                       value={profileData.phone}
@@ -262,7 +262,7 @@ export default function AdminProfile() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="dob" className="mb-2">Ngày sinh <span className='text-red-600'>*</span> </Label>
+                    <Label htmlFor="dob" className="mb-2">Ngày sinh</Label>
                     <Input
                       id="dob"
                       type="date"

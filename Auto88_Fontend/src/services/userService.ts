@@ -34,11 +34,11 @@ export interface CreateUserWithAccountRequest {
 // ✅ Khôi phục trường password (optional) để Admin dùng
 export interface UserUpdateRequest {
   userId: string;
-  fullName: string;
-  dob: string;
-  gender: Gender;
-  phone: string;
-  address: string;
+  fullName?: string;
+  dob?: string;
+  gender?: Gender;
+  phone?: string;
+  address?: string;
   email: string;
   role: UserRole;
   status: AccountStatus;
@@ -132,17 +132,30 @@ class UserService {
   // ✅ Cập nhật hàm này để hỗ trợ cả Admin (có pass) và User (không pass)
   async updateUser(userId: string, userData: UserUpdateRequest, avatarFile?: File): Promise<void> {
     const formData = new FormData();
-    formData.append('fullName', userData.fullName);
-    formData.append('dob', userData.dob);
-    formData.append('gender', userData.gender);
-    formData.append('phone', userData.phone);
-    formData.append('address', userData.address);
-    formData.append('email', userData.email);
-    formData.append('role', userData.role);
-    formData.append('status', userData.status);
+    
+    // Vì các trường là Optional (?) nên PHẢI check tồn tại trước khi append
+    if (userData.fullName) formData.append('fullName', userData.fullName);
+    
+    // Check dob
+    if (userData.dob) formData.append('dob', userData.dob);
+    
+    // Check gender (Đã sửa lỗi gende -> gender)
+    if (userData.gender) formData.append('gender', userData.gender);
+    
+    // Check phone
+    if (userData.phone && userData.phone.trim() !== '') {
+      formData.append('phone', userData.phone);
+    } 
+    
+    // Check address
+    if (userData.address) formData.append('address', userData.address);
+    
+    // Các trường bắt buộc trong Interface thì có thể append luôn (hoặc check cho an toàn)
+    if (userData.email) formData.append('email', userData.email);
+    if (userData.role) formData.append('role', userData.role);
+    if (userData.status) formData.append('status', userData.status);
 
-    // ✅ QUAN TRỌNG: Chỉ append password nếu có giá trị (Dành cho Admin)
-    // Backend sẽ check quyền: Nếu là Admin -> Cho update. Nếu là User -> Bỏ qua.
+    // Password chỉ gửi nếu có nhập
     if (userData.password && userData.password.trim() !== '') {
       formData.append('password', userData.password);
     }
