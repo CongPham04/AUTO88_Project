@@ -130,6 +130,28 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // --- KIỂM TRA VALIDATION CHO BƯỚC 2 ---
+    if (step === 2) {
+      if (!selectedProvinceCode) {
+        toast.error("Vui lòng chọn Tỉnh/Thành phố.");
+        return;
+      }
+      if (!selectedDistrictCode) {
+        toast.error("Vui lòng chọn Quận/Huyện.");
+        return;
+      }
+      if (!selectedWardCode) {
+        toast.error("Vui lòng chọn Phường/Xã.");
+        return;
+      }
+      if (!formData.address.trim()) {
+        toast.error("Vui lòng nhập địa chỉ chi tiết.");
+        return;
+      }
+    }
+    // ----------------------------------------
+
     if (step < 3) {
       setStep(step + 1);
       return;
@@ -268,7 +290,11 @@ export default function CheckoutPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="space-y-2">
                             <Label>Tỉnh / Thành phố <span className="text-red-500">*</span></Label>
-                            <Select value={selectedProvinceCode} onValueChange={handleProvinceChange}>
+                            <Select 
+                                value={selectedProvinceCode} 
+                                onValueChange={handleProvinceChange}
+                                required // Thêm thuộc tính required
+                            >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Chọn Tỉnh/Thành" />
                                 </SelectTrigger>
@@ -283,7 +309,12 @@ export default function CheckoutPage() {
                         {/* Chọn Huyện */}
                         <div className="space-y-2">
                             <Label>Quận / Huyện <span className="text-red-500">*</span></Label>
-                            <Select value={selectedDistrictCode} onValueChange={handleDistrictChange} disabled={!selectedProvinceCode}>
+                            <Select 
+                                value={selectedDistrictCode} 
+                                onValueChange={handleDistrictChange} 
+                                disabled={!selectedProvinceCode}
+                                required // Thêm thuộc tính required
+                            >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Chọn Quận/Huyện" />
                                 </SelectTrigger>
@@ -298,7 +329,12 @@ export default function CheckoutPage() {
                         {/* Chọn Xã */}
                         <div className="space-y-2">
                             <Label>Phường / Xã <span className="text-red-500">*</span></Label>
-                            <Select value={selectedWardCode} onValueChange={handleWardChange} disabled={!selectedDistrictCode}>
+                            <Select 
+                                value={selectedWardCode} 
+                                onValueChange={handleWardChange} 
+                                disabled={!selectedDistrictCode}
+                                required // Thêm thuộc tính required
+                            >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Chọn Phường/Xã" />
                                 </SelectTrigger>

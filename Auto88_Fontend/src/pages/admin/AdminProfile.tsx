@@ -276,7 +276,7 @@ export default function AdminProfile() {
                     />
                   </div>
                   <div>
-                    <Label className="mb-2">Giới tính <span className='text-red-600'>*</span> </Label>
+                    <Label className="mb-2">Giới tính</Label>
                     <Select
                       value={profileData.gender}
                       onValueChange={(value: 'MALE' | 'FEMALE' | 'OTHER') =>
