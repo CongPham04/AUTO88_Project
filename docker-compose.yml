@@ -41,6 +41,8 @@ services:
       # === BỔ SUNG CẤU HÌNH EMAIL TẠI ĐÂY ===
       MAIL_USERNAME: auto88.com.vn@gmail.com
       MAIL_PASSWORD: ufdmjnkbkgcjpmjq 
+      # 👇 THÊM DÒNG NÀY (Thay bằng domain thật của bạn, KHÔNG có dấu / ở cuối)
+      FRONTEND_URL: http://auto88.id.vn
       # 🔑 CHUỖI JDBC ĐÃ SỬA: Khắc phục lỗi Public Key Retrieval
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/car_sales_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
@@ -48,7 +50,7 @@ services:
       
       # CẤU HÌNH KHÁC
       JWT_SECRET: HCUzp+KbjzGwPpBYKLChUvu9WUc+D9b3kAvq1cDi45jkVKzf+EF9bpIeq42e0KFSm7Lqm2i93YLmi4qQ9lW5g== 
-      CORS_ALLOWED_ORIGINS: http://localhost:3000
+      CORS_ALLOWED_ORIGINS: "http://localhost:3000,http://160.187.1.244:3000,http://auto88.id.vn,http://www.auto88.id.vn"
       SERVER_SERVLET_CONTEXT_PATH: /carshop
 
     # 🎯 Ánh xạ thư mục Uploads cho Backend
@@ -71,7 +73,7 @@ services:
     image: auto88-fe:latest
     container_name: auto88_fe
     ports:
-      - "3000:80"
+      - "80:80"
     depends_on:
       - backend
     restart: always

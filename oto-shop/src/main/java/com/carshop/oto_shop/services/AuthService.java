@@ -46,8 +46,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final EmailService emailService;
 
-    // Lấy URL frontend từ file cấu hình (mặc định là http://localhost:3000 nếu không tìm thấy)
-    @Value("${app.frontend.url:http://localhost:3000}")
+    @Value("${app.frontend.url}")
     private String frontendUrl;
 
     public AuthService(AccountRepository accountRepository,
