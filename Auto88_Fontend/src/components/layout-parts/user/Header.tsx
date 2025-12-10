@@ -69,7 +69,7 @@ export default function Header() {
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="w-4 h-4" />
-                <span>info@auto88.com</span>
+                <span>auto88.com.vn@gmail.com</span>
               </div>
             </div>
             <div className="hidden md:block">

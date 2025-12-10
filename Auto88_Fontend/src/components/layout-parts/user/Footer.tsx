@@ -39,7 +39,7 @@ export default function Footer() {
               <li><button onClick={() => navigate('/cars')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">Xe ô tô</button></li>
               <li><button onClick={() => navigate('/news')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">Tin tức và khuyến mãi</button></li>
               <li><button onClick={() => navigate('/comparison')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">So sánh xe</button></li>
-              <li><button onClick={() => navigate('/profile')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">Liên hệ</button></li>
+              {/* <li><button onClick={() => navigate('/profile')} className="text-gray-400 hover:text-white transition-colors cursor-pointer">Liên hệ</button></li> */}
             </ul>
           </div>
 
@@ -67,7 +67,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="w-5 h-5 text-red-500" />
-                <p className="text-gray-400">info@auto88.com</p>
+                <p className="text-gray-400">auto88.com.vn@gmail.com</p>
               </div>
             </div>
             <div className="mt-6">
