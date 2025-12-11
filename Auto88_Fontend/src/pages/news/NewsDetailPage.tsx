@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 import newsService, { NewsResponse } from '@/services/newsService';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 // Skeleton giữ nguyên style cũ
 const NewsDetailSkeleton = () => (
@@ -35,6 +36,15 @@ export default function NewsDetailPage() {
   const [article, setArticle] = useState<NewsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // ========================================================================
+  // ✅ [THÊM MỚI] Cập nhật Title Website theo tiêu đề bài viết
+  // Logic: Nếu có article -> "Tiêu đề bài viết | Auto88"
+  //        Nếu chưa có -> "Chi tiết tin tức | Auto88"
+  // ========================================================================
+  const pageTitle = article ? article.title : 'Chi tiết tin tức';
+  useDocumentTitle(pageTitle);
+  // ========================================================================
 
   useEffect(() => {
     const fetchArticle = async () => {

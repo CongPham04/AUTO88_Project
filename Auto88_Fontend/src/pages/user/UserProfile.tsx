@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 import MyOrdersTab from '@/components/profile/MyOrdersTab';
 import { Skeleton } from '@/components/ui/skeleton';
 import ChangePasswordDialog from '@/components/profile/ChangePasswordDialog';
-import { url } from 'inspector';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 // ... (UserProfileSkeleton giữ nguyên) ...
 const UserProfileSkeleton = () => (
@@ -60,6 +60,27 @@ export default function UserProfile() {
   const [originalProfileData, setOriginalProfileData] = useState<ProfileData | null>(null);
   const [selectedFileName, setSelectedFileName] = useState('Chưa chọn ảnh!');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
+  // ========================================================================
+  // ✅ [SỬA LẠI] Logic tính toán Title: Ưu tiên Dialog trước -> Sau đó đến Tab
+  // ========================================================================
+  const getPageTitle = () => {
+    // 1. Nếu đang mở Dialog đổi mật khẩu
+    if (actionParam === 'change-password') {
+      return 'Đổi mật khẩu';
+    }
+
+    // 2. Nếu không mở Dialog thì hiển thị theo Tab
+    switch (currentTab) {
+      case 'orders': return 'Đơn hàng của tôi';
+      case 'wishlist': return 'Yêu thích';
+      default: return 'Thông tin cá nhân';
+    }
+  };
+  
+  // Gọi hook 1 lần duy nhất ở đây, nó sẽ tự chạy lại khi URL thay đổi
+  useDocumentTitle(getPageTitle());
+  // ========================================================================
 
   // --- Effects ---
 

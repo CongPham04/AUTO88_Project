@@ -36,6 +36,7 @@ import UserFormPage from "@/pages/admin/users/UserFormPage";
 import UserDetailPage from "@/pages/admin/users/UserDetailPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import NotFoundPageAdmin from "@/pages/admin/NotFoundPageAdmin";
+import PageTitleUpdater from "@/components/PageTitleUpdater"; // Import component cập nhật tiêu đề trang
 
 export default function App() {
   const initializeAuth = useUserStore((state) => state.initializeAuth);
@@ -51,6 +52,7 @@ export default function App() {
 
   return (
     <>
+      <PageTitleUpdater /> {/* Thêm component cập nhật tiêu đề trang */}
       <Routes location={background || location}>
         {/* PUBLIC ROUTES */}
         <Route path="/" element={<MainLayout />}>

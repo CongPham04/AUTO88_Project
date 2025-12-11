@@ -19,6 +19,7 @@ import orderService, { OrderResponse } from '@/services/orderService';
 import carService, { CarResponse, getColorName } from '@/services/carService'; // ✅ Import getColorName
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 // ... (Giữ nguyên các helper formatPrice, formatDate, statusConfig, paymentStatusMap, OrderDetailSkeleton) ...
 
@@ -41,17 +42,78 @@ const paymentStatusMap: Record<string, string> = {
   FAILED: 'Thanh toán lỗi',
 };
 
+// ✅ [CẬP NHẬT] Skeleton giống hệt giao diện thật
 const OrderDetailSkeleton = () => (
-  <div className="max-w-7xl mx-auto py-8 px-4">
-    <Skeleton className="h-8 w-48 mb-6" />
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div className="md:col-span-2 space-y-6">
-        <Skeleton className="h-40 w-full rounded-xl" />
-        <Skeleton className="h-64 w-full rounded-xl" />
-      </div>
-      <div className="space-y-6">
-        <Skeleton className="h-48 w-full rounded-xl" />
-        <Skeleton className="h-40 w-full rounded-xl" />
+  <div className="min-h-screen bg-gray-50/50">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Back button skeleton */}
+      <Skeleton className="h-5 w-48 mb-6" />
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* LEFT COLUMN SKELETON */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Card 1: Order Info & Items */}
+          <Card className="border-none shadow-sm">
+            <CardHeader className="pb-4 border-b">
+              <div className="flex justify-between items-center">
+                <div className="space-y-2">
+                  <Skeleton className="h-7 w-48" /> {/* Title */}
+                  <Skeleton className="h-4 w-32" /> {/* Date */}
+                </div>
+                <Skeleton className="h-8 w-24 rounded-full" /> {/* Badge */}
+              </div>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-4">
+              {/* Fake 2 items */}
+              {[1, 2].map((i) => (
+                <div key={i} className="flex gap-5 p-4 rounded-lg bg-gray-50/50 border border-gray-100">
+                  <Skeleton className="w-32 h-16 rounded-md" /> {/* Image */}
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-3/4" /> {/* Name */}
+                    <Skeleton className="h-4 w-1/3" /> {/* Attributes */}
+                  </div>
+                  <div className="text-right space-y-2">
+                    <Skeleton className="h-4 w-20 ml-auto" />
+                    <Skeleton className="h-6 w-24 ml-auto" />
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Card 2: Payment Summary */}
+          <Card className="border-none shadow-sm">
+            <CardHeader className="pb-3 border-b bg-gray-50/30">
+              <Skeleton className="h-6 w-40" />
+            </CardHeader>
+            <CardContent className="pt-5 space-y-3">
+              <div className="flex justify-between"><Skeleton className="h-4 w-24" /><Skeleton className="h-4 w-24" /></div>
+              <div className="flex justify-between"><Skeleton className="h-4 w-24" /><Skeleton className="h-4 w-24" /></div>
+              <Separator className="my-2" />
+              <div className="flex justify-between"><Skeleton className="h-6 w-32" /><Skeleton className="h-6 w-32" /></div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* RIGHT COLUMN SKELETON */}
+        <div className="space-y-6">
+          <Card className="border-none shadow-sm h-fit">
+            <CardHeader className="pb-3 border-b bg-gray-50/30">
+              <Skeleton className="h-6 w-48" />
+            </CardHeader>
+            <CardContent className="pt-4 space-y-4">
+              <Skeleton className="h-4 w-full" /> {/* Name */}
+              <Skeleton className="h-4 w-2/3" /> {/* Phone */}
+              <Skeleton className="h-4 w-3/4" /> {/* Email */}
+              <Skeleton className="h-4 w-full" /> {/* Address */}
+              <Separator />
+              <Skeleton className="h-10 w-full rounded-md" /> {/* Payment Method Box */}
+              <Skeleton className="h-16 w-full rounded-md bg-yellow-50" /> {/* Note */}
+            </CardContent>
+          </Card>
+        </div>
+
       </div>
     </div>
   </div>
@@ -68,6 +130,18 @@ export default function OrderDetailPage() {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [isCancelling, setIsCancelling] = useState(false);
+
+  // ========================================================================
+  // ✅ [THÊM MỚI] Cập nhật Title Website theo mã đơn hàng
+  // Logic: Nếu có order -> "Đơn hàng #123... | Auto88"
+  //        Nếu chưa có -> "Chi tiết đơn hàng | Auto88"
+  // ========================================================================
+  const pageTitle = order 
+    ? `Đơn hàng #${order.orderId.slice(0, 8).toUpperCase()}` 
+    : 'Chi tiết đơn hàng';
+  
+  useDocumentTitle(pageTitle);
+  // ========================================================================
 
   useEffect(() => {
     const fetchOrder = async () => {

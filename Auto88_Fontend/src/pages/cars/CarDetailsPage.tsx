@@ -30,6 +30,7 @@ import { useCompareStore } from '@/store/compareStore';
 import { toast } from 'sonner';
 import carService, { CarResponse, CarDetailResponse, Color, getColorName } from '@/services/carService';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 // --- SKELETON COMPONENT ---
 const CarDetailSkeleton = () => (
@@ -76,6 +77,15 @@ export default function CarDetailsPage() {
   // State quản lý ảnh
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [images, setImages] = useState<string[]>([]);
+
+  // ========================================================================
+  // ✅ [THÊM MỚI] Cập nhật Title Website theo tên xe
+  // Logic: Nếu đã tải xong thông tin xe (car tồn tại) -> "Mercedes C300 2022 | Auto88"
+  //        Nếu chưa tải xong -> "Chi tiết xe | Auto88"
+  // ========================================================================
+  const pageTitle = car ? `${car.brand} ${car.model} ${car.manufactureYear}` : 'Chi tiết xe';
+  useDocumentTitle(pageTitle);
+  // ========================================================================
 
   useEffect(() => {
     const fetchCarData = async () => {
