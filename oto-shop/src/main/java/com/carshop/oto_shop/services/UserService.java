@@ -17,6 +17,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
@@ -45,7 +46,8 @@ public class UserService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     public static final String UPLOAD_DIR = "uploads/avatars/";
-    private static final String BASE_IMAGE_URL = "http://localhost:8080/carshop/api/users/avatar/image/";
+    @Value("${app.base-url}")
+    private String appBaseUrl;
 
     public UserService(UserMapper userMapper, UserRepository userRepository, AccountRepository accountRepository, PasswordEncoder passwordEncoder, PasswordResetTokenRepository passwordResetTokenRepository) {
         this.userMapper = userMapper;
@@ -260,7 +262,7 @@ public class UserService {
             UserResponse res = userMapper.toUserResponse(user);
             if (user.getAvatarUrl() != null) {
                 String fileName = Paths.get(user.getAvatarUrl()).getFileName().toString();
-                res.setAvatarUrl(BASE_IMAGE_URL + fileName);
+                res.setAvatarUrl(appBaseUrl + "/api/users/avatar/image/" + fileName);
             }
             return res;
         }).toList();
@@ -356,7 +358,7 @@ public class UserService {
         if(user.getAvatarUrl() != null){
             // Thay "/uploads/xxx.png" thành full URL API
             String fileName = Paths.get(user.getAvatarUrl()).getFileName().toString();
-            response.setAvatarUrl(BASE_IMAGE_URL + fileName);
+            response.setAvatarUrl(appBaseUrl + "/api/users/avatar/image/" + fileName);
         }
         return response;
     }
@@ -371,7 +373,7 @@ public class UserService {
                     UserResponse response = userMapper.toUserResponse(user);
                     if (user.getAvatarUrl() != null) {
                         String fileName = Paths.get(user.getAvatarUrl()).getFileName().toString();
-                        response.setAvatarUrl(BASE_IMAGE_URL + fileName);
+                        response.setAvatarUrl(appBaseUrl + "/api/users/avatar/image/" + fileName);
                     }
                     return response;
                 })
@@ -385,7 +387,7 @@ public class UserService {
         if(user.getAvatarUrl() != null){
             // Thay "/uploads/xxx.png" thành full URL API
             String fileName = Paths.get(user.getAvatarUrl()).getFileName().toString();
-            response.setAvatarUrl(BASE_IMAGE_URL + fileName);
+            response.setAvatarUrl(appBaseUrl + "/api/users/avatar/image/" + fileName);
         }
         return response;
     }
@@ -434,7 +436,7 @@ public class UserService {
             UserResponse response = userMapper.toUserResponse(savedUser);
             if (avatarUrl != null) {
                 String fileName = Paths.get(avatarUrl).getFileName().toString();
-                response.setAvatarUrl(BASE_IMAGE_URL + fileName);
+                response.setAvatarUrl(appBaseUrl + "/api/users/avatar/image/" + fileName);
             }
 
             return response;

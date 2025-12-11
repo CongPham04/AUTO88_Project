@@ -4,13 +4,16 @@ import com.carshop.oto_shop.dto.news.NewsRequestDto;
 import com.carshop.oto_shop.dto.news.NewsResponseDto;
 import com.carshop.oto_shop.entities.News;
 import org.mapstruct.*;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.nio.file.Paths;
 
 @Mapper(componentModel = "spring")
-public interface NewsMapper {
+public abstract class NewsMapper {
 
-    String BASE_IMAGE_URL = "http://localhost:8080/carshop/api/news/image/";
+    // Inject biến từ application.properties
+    @Value("${app.base-url}")
+    protected String appBaseUrl;
 
     // 1. To Entity
     @Mapping(target = "newsId", ignore = true)
@@ -18,12 +21,12 @@ public interface NewsMapper {
     @Mapping(target = "publishedAt", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    News toNews(NewsRequestDto dto);
+    public abstract News toNews(NewsRequestDto dto);
 
-    // 2. To DTO (SỬA LỖI TẠI ĐÂY)
-    // Sử dụng qualifiedByName để chỉ định rõ là dùng hàm "mapUrl" cho trường này
+    // 2. To DTO
+    // Dùng qualifiedByName để gọi hàm xử lý link ảnh bên dưới
     @Mapping(target = "coverImageUrl", source = "coverImageUrl", qualifiedByName = "mapUrl")
-    NewsResponseDto toNewsResponseDto(News news);
+    public abstract NewsResponseDto toNewsResponseDto(News news);
 
     // 3. Update Entity
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
@@ -32,12 +35,11 @@ public interface NewsMapper {
     @Mapping(target = "publishedAt", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    void updateNewsFromDto(NewsRequestDto dto, @MappingTarget News news);
+    public abstract void updateNewsFromDto(NewsRequestDto dto, @MappingTarget News news);
 
-    // 4. Helper Method (SỬA LỖI TẠI ĐÂY)
-    // Thêm @Named để MapStruct không tự động dùng hàm này cho các trường String khác (Title, Content...)
+    // 4. Helper Method: Xử lý link ảnh Cover
     @Named("mapUrl")
-    default String mapCoverImageUrl(String originalUrl) {
+    protected String mapCoverImageUrl(String originalUrl) {
         if (originalUrl == null || originalUrl.isEmpty()) {
             return null;
         }
@@ -45,8 +47,11 @@ public interface NewsMapper {
         if (originalUrl.startsWith("http://") || originalUrl.startsWith("https://")) {
             return originalUrl;
         }
-        // Nếu là file local -> ghép link API
+
+        // Nếu là file local -> lấy tên file và ghép với appBaseUrl
         String fileName = Paths.get(originalUrl).getFileName().toString();
-        return BASE_IMAGE_URL + fileName;
+
+        // Kết quả: http://auto88.id.vn/carshop/api/news/image/ten_anh.jpg
+        return appBaseUrl + "/api/news/image/" + fileName;
     }
 }
