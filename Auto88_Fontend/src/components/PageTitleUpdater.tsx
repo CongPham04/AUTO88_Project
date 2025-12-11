@@ -28,6 +28,7 @@ const PageTitleUpdater = () => {
       else if (path.startsWith('/admin/orders')) title = 'Quản lý đơn hàng | Admin';
       else if (path.startsWith('/admin/users')) title = 'Quản lý người dùng | Admin';
       else if (path.startsWith('/admin/news')) title = 'Quản lý tin tức | Admin';
+      else if (path.startsWith('/admin/profile')) title = 'Tải khoản của tôi | Admin';
       else title = 'Trang quản trị | Admin';
     }
 
