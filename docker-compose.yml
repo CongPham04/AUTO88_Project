@@ -53,7 +53,7 @@ services:
       
       # CẤU HÌNH KHÁC
       JWT_SECRET: HCUzp+KbjzGwPpBYKLChUvu9WUc+D9b3kAvq1cDi45jkVKzf+EF9bpIeq42e0KFSm7Lqm2i93YLmi4qQ9lW5g== 
-      CORS_ALLOWED_ORIGINS: "http://localhost:3000,http://160.187.1.244:3000,http://auto88.id.vn,http://www.auto88.id.vn"
+      CORS_ALLOWED_ORIGINS: "http://localhost:3000,http://103.6.234.239:3000,http://auto88.id.vn,http://www.auto88.id.vn"
       SERVER_SERVLET_CONTEXT_PATH: /carshop
 
     # 🎯 Ánh xạ thư mục Uploads cho Backend
