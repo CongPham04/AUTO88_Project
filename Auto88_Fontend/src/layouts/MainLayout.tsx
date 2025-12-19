@@ -11,7 +11,7 @@ export default function MainLayout() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Header />
-      <main className="flex-1 container mx-auto w-full p-4 relative">
+      <main className="flex-1 container mx-auto w-full relative">
         {isAuth && <HomePage />}  
         {/* // Chỉ render khi là auth route, tránh duplicate trên home */}
         <Outlet />
