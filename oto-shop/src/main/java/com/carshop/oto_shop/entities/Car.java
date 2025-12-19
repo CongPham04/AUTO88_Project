@@ -69,8 +69,15 @@ public class Car {
     @OneToOne(mappedBy = "car", cascade = CascadeType.ALL, orphanRemoval = true)
     private CarDetail carDetail;
 
+    // Thêm 2 field mới
+    @Column(name = "avg_rating", columnDefinition = "DOUBLE(3, 2)")
+    private Double avgRating = 0.0;
+
+    @Column(name = "review_count", nullable = false)
+    private Integer reviewCount = 0;
+
     @PrePersist
-    public void generateAuto(){
+    public void generateAuto() {
         if (this.carId == null) {
             this.carId = 100000L + new Random().nextLong(900000);
         }
@@ -95,12 +102,29 @@ public class Car {
     // Helper method để set detail (quan trọng cho Cascade)
     public void setCarDetailInfo(CarDetail carDetail) {
         this.carDetail = carDetail;
-        if(carDetail != null) {
+        if (carDetail != null) {
             carDetail.setCar(this);
         }
     }
 
     public Car() {
+    }
+
+    // Thêm getters/setters cho 2 field mới này
+    public Double getAvgRating() {
+        return avgRating;
+    }
+
+    public void setAvgRating(Double avgRating) {
+        this.avgRating = avgRating;
+    }
+
+    public Integer getReviewCount() {
+        return reviewCount;
+    }
+
+    public void setReviewCount(Integer reviewCount) {
+        this.reviewCount = reviewCount;
     }
 
     public Long getCarId() {

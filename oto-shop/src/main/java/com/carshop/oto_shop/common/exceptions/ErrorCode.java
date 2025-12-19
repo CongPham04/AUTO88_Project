@@ -6,17 +6,17 @@ public enum ErrorCode {
     ACCOUNT_NOT_FOUND("ACCOUNT_NOT_FOUND", "Tài khoản không tồn tại!", HttpStatus.NOT_FOUND),
     ACCOUNT_BANNED("ACCOUNT_BANNED", "Tài khoản của bạn đã bị khoá!", HttpStatus.FORBIDDEN),
     ACCOUNT_INACTIVE("ACCOUNT_INACTIVE", "Tài khoản của bạn chưa được kích hoạt! Liên hệ ngay đến quản trị viên của Auto88 để được kích hoạt.", HttpStatus.FORBIDDEN),
-    USER_NOT_FOUND("USER_NOT_FOUND","Người dùng không tồn tại!", HttpStatus.NOT_FOUND),
+    USER_NOT_FOUND("USER_NOT_FOUND", "Người dùng không tồn tại!", HttpStatus.NOT_FOUND),
     CARCATEGORY_NOT_FOUND("CARCATEGORY_NOT_FOUND", "Danh mục không còn tồn tại!", HttpStatus.NOT_FOUND),
     CAR_NOT_FOUND("CARCATE_NOT_FOUND", "Sản phẩm không còn tồn tại!", HttpStatus.NOT_FOUND),
     CARBRAND_NOT_FOUND("CARBRAND_NOT_FOUND", "Thương hiệu không còn tồn tại!", HttpStatus.NOT_FOUND),
     CAR_DETAIL_NOT_FOUND("CAR_DETAIL_NOT_FOUND", "Thông tin chi tiết này không còn tồn tại!", HttpStatus.NOT_FOUND),
-    FILE_NOT_FOUND("FILE_NOT_FOUND","File không tồn tại!", HttpStatus.NOT_FOUND),
+    FILE_NOT_FOUND("FILE_NOT_FOUND", "File không tồn tại!", HttpStatus.NOT_FOUND),
     INTERNAL_SERVER_ERROR("INTERNAL_SERVER_ERROR", "Lỗi máy chủ!", HttpStatus.INTERNAL_SERVER_ERROR),
     FILE_UPLOAD_ERROR("FILE_UPLOAD_ERROR", "Lỗi khi upload file!", HttpStatus.INTERNAL_SERVER_ERROR),
     FILE_SIZE_EXCEEDED("FILE_SIZE_EXCEEDED", "Kích thước vượt quá giới hạn cho phép!", HttpStatus.PAYLOAD_TOO_LARGE),
     UNSUPPORTED_MEDIA_TYPE("UNSUPPORTED_MEDIA_TYPE", "Định dạng dữ liệu không được hỗ trợ!", HttpStatus.UNSUPPORTED_MEDIA_TYPE),
-    DUPLICATE_KEY("DUPLICATE_KEY","Trùng lặp dữ liệu!",HttpStatus.CONFLICT),
+    DUPLICATE_KEY("DUPLICATE_KEY", "Trùng lặp dữ liệu!", HttpStatus.CONFLICT),
     UNKNOWN("UNKNOWN_ERROR", "Lỗi không xác định!", HttpStatus.INTERNAL_SERVER_ERROR),
     BAD_REQUEST("BAD_REQUEST", "Dữ liệu đầu vào không hợp lệ!", HttpStatus.BAD_REQUEST),
     METHOD_NOT_ALLOWED("METHOD_NOT_ALLOWED", "Phương thức HTTP không được hỗ trợ!", HttpStatus.METHOD_NOT_ALLOWED),
@@ -34,10 +34,13 @@ public enum ErrorCode {
     VERIFICATION_CODE_EXPIRED("VERIFICATION_CODE_EXPIRED", "Mã xác thực đã hết hạn. Vui lòng đăng ký lại hoặc yêu cầu gửi lại mã.", HttpStatus.BAD_REQUEST),
     ACCOUNT_ALREADY_VERIFIED("ACCOUNT_ALREADY_VERIFIED", "Tài khoản đã được kích hoạt trước đó, vui lòng đăng nhập.", HttpStatus.BAD_REQUEST),
     ACCOUNT_DELETED("ACCOUNT_DELETED", "Tài khoản này đã bị xóa khỏi hệ thống.", HttpStatus.NOT_FOUND),
+    ACCESS_DENIED("ACCESS_DENIED", "Truy cập bị từ chối!", HttpStatus.FORBIDDEN),
+    REVIEW_NOT_FOUND("REVIEW_NOT_FOUND","Đánh giá không còn tồn tại!", HttpStatus.NOT_FOUND),
     PASSWORD_RESET_LIMIT_EXCEEDED("PASSWORD_RESET_LIMIT_EXCEEDED", "Bạn đã đạt giới hạn! Vui lòng kiểm tra email hoặc thử lại sau 24 giờ.", HttpStatus.TOO_MANY_REQUESTS);
     private final String code;
     private final String message;
     private final HttpStatus httpStatus;
+
     ErrorCode(String code, String message, HttpStatus httpStatus) {
         this.code = code;
         this.message = message;

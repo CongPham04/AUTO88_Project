@@ -131,6 +131,17 @@ public class SecurityConfig {
                                 // 2. Admin Access (Quản lý tin tức)
                                 // Các endpoint còn lại của /api/news/** (GET all, POST, PUT, DELETE) sẽ yêu cầu quyền ADMIN
                                 .requestMatchers("/api/news/**").hasRole(Role.ADMIN.name())
+                        // ================== REVIEWS ==================
+                        // 1. PUBLIC READ: Xem tất cả đánh giá của một xe
+                        .requestMatchers(HttpMethod.GET, "/api/reviews/car/**").permitAll()
+
+                        // 2. USER/ADMIN ACTIONS: Thêm, kiểm tra
+                        .requestMatchers(HttpMethod.POST, "/api/reviews").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
+                        .requestMatchers(HttpMethod.GET, "/api/reviews/order-detail/**").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
+
+                        // 3. ADMIN MANAGEMENT: GET All, PATCH, DELETE
+                        // Dòng này bao phủ: GET /api/reviews, PATCH /api/reviews/{id}/approve, DELETE /api/reviews/{id}
+                        .requestMatchers("/api/reviews/**").hasRole(Role.ADMIN.name())
                         // ================== ADMIN DASHBOARD ==================
                         .requestMatchers("/api/admin/**").hasRole(Role.ADMIN.name())
 

@@ -392,6 +392,12 @@ public class UserService {
         return response;
     }
 
+    // Thêm hàm lấy User Entity trực tiếp (Dùng nội bộ cho Service khác)
+    public User getUserEntityByEmail(String email) {
+        return userRepository.findByAccount_Email(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+    }
+
     /**
      * Create both Account and User in a single transaction
      * @param request Combined request containing both account and user information

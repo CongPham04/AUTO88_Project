@@ -56,6 +56,7 @@ public class SwaggerConfig {
                         "/api/meta/**",
                         "/api/cars/**",      // Đã bao gồm: image, search, compare, details
                         "/api/promotions/**",
+                        "/api/reviews/car/**", // ✅ Bổ sung Public Get Reviews
                         // ✅ CẬP NHẬT: Chỉ hiển thị các API tin tức công khai
                         "/api/news/published/**",
                         "/api/news/image/**",
@@ -72,7 +73,8 @@ public class SwaggerConfig {
                 .pathsToMatch(
                         "/api/orders/**",
                         "/api/payments/**",
-                        "/api/users/**"
+                        "/api/users/**",
+                        "/api/reviews/**" // ✅ Bổ sung Review POST và GET /order-detail
                 )
                 .build();
     }
@@ -89,7 +91,8 @@ public class SwaggerConfig {
                         "/api/orders/**",
                         "/api/payments/**",
                         "/api/promotions/**",
-                        "/api/news/**"
+                        "/api/news/**",
+                        "/api/reviews/**" // ✅ Bổ sung Admin quản lý Reviews
                 )
                 .build();
     }
