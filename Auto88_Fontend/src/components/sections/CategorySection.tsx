@@ -13,9 +13,9 @@ export default function CategorySection({ onCategoryClick }: CategorySectionProp
 
   // ĐÃ SỬA: Loại bỏ dấu // dư thừa trong link
   const categoryImages: Record<string, string> = {
-    SEDAN: 'https://www.toyota.com.vn/Resources/Images/BCF393FA9AFEC309E1F2A98CF5A57CEB.png',
-    SUV: 'https://www.toyota.com.vn/Resources/Images/DB64D61952050267C2FFE2272E14007E.png',
-    HATCHBACK: 'https://www.toyota.com.vn/Resources/Images/2B145FE80DA2EB1E130C8767B693D021.png',
+    SEDAN: 'https://hyundaigiaiphong.com.vn/wp-content/uploads/2025/09/bo-xe-web-i10sedan-update.png',
+    SUV: 'https://hyundaithainguyenjsc.vn/wp-content/uploads/2025/06/20250530nc-p-ot-mbp_31.png',
+    HATCHBACK: 'https://hyundaigiaiphong.com.vn/wp-content/uploads/2025/09/bo-xe-web-10-1-600x341.png',
   };
 
   useEffect(() => {
