@@ -14,6 +14,7 @@ interface FeaturedCarsProps {
 
 const SkeletonCard = () => (
   <Card className="overflow-hidden border-none shadow-sm">
+    {/* Tăng chiều cao skeleton ảnh lên cho khớp với CarCard mới */}
     <Skeleton className="h-64 w-full" /> 
     <CardContent className="p-6 space-y-4">
       <div className="flex justify-between">
@@ -48,13 +49,7 @@ export default function FeaturedCars({ cars, onViewDetails, isLoading }: Feature
 
   return (
     <section className="py-16 bg-gray-50">
-      {/* 
-         ✅ THAY ĐỔI 1: Nới rộng container
-         - max-w-7xl (1280px) -> max-w-[1600px] (Rộng hơn nhiều)
-         - Hoặc dùng container-fluid bằng cách xóa max-w và chỉ để px-8 nếu muốn full màn hình
-      */}
-      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12">
-        
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           {isLoading ? (
             <>
@@ -70,17 +65,18 @@ export default function FeaturedCars({ cars, onViewDetails, isLoading }: Feature
         </div>
         
         {isLoading ? (
-          // ✅ THAY ĐỔI 2: Chỉnh lại Grid Skeleton thành 4 cột
+          // 1. Trạng thái Loading
+          // ✅ SỬA: Đổi thành grid-cols-3 để skeleton to ra tương ứng
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 min-h-96">
-            <SkeletonCard />
             <SkeletonCard />
             <SkeletonCard />
             <SkeletonCard />
           </div>
         ) : cars.length > 0 ? (
-          // ✅ THAY ĐỔI 3: Chỉnh lại Grid Data thành 4 cột
-          // - lg:grid-cols-4: Để 4 xe nằm trên cùng 1 hàng
-          // - gap-8: Khoảng cách giữa các xe rộng rãi
+          // 2. Trạng thái có Data
+          // ✅ SỬA: 
+          // - lg:grid-cols-4 -> lg:grid-cols-3 (Chỉ 3 xe 1 hàng => Thẻ to hơn)
+          // - gap-6 -> gap-8 (Tăng khoảng cách cho thoáng)
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 min-h-96">
             {cars.map((car) => (
               <CarCard 
@@ -94,12 +90,13 @@ export default function FeaturedCars({ cars, onViewDetails, isLoading }: Feature
             ))}
           </div>
         ) : (
+          // 3. Trạng thái Rỗng
           <div className="min-h-96 flex items-center justify-center text-center py-10 text-gray-500">
             <p>Hiện không có xe nào nổi bật.</p>
           </div>
         )}
 
-        <div className="text-center mt-8">
+        <div className="text-center mt-6">
           <Button 
             variant="outline" 
             size="lg" 
