@@ -196,14 +196,14 @@ export default function OrderDetailPage() {
   const StatusIcon = statusConfig[order.status]?.icon || Box;
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-gray-50/50 mt-2 py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div 
-          className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 cursor-pointer w-fit mb-6 transition-colors font-medium" 
+          className="flex items-center gap-1 text-l text-gray-500 hover:text-gray-900 cursor-pointer w-fit transition-colors mb-6 text-xl hover:text-red-700" 
           onClick={() => navigate('/profile?tab=orders')}
         >
-          <ArrowLeft className="w-4 h-4" /> Quay lại danh sách đơn hàng
+          <ArrowLeft className="w-4 h-4 mr-2" /> Quay lại danh sách đơn hàng
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8"> 

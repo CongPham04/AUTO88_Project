@@ -314,11 +314,11 @@ export default function CarListPage() {
     searchParams.has('color');
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 mt-2 py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header - (Tĩnh, giữ nguyên) */}
         <div className="mb-3">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Danh sách xe ô tô</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Danh sách xe ô tô</h1>
           
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
             <div className="flex items-center gap-4 w-full lg:w-auto">

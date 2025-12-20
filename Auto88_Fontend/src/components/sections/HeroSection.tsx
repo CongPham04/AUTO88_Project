@@ -105,11 +105,11 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
                 <div key={index} className="text-center group cursor-default">
                   <div className="flex justify-center mb-4">
                     <div className="bg-red-100 p-3 rounded-full group-hover:bg-red-200 transition-colors">
-                      <IconComponent className="w-8 h-8 text-red-600" />
+                      <IconComponent className="w-12 h-12 text-red-600" />
                     </div>
                   </div>
-                  <div className="text-2xl font-bold text-gray-900 mb-2">{stat.value}</div>
-                  <div className="text-gray-600">{stat.label}</div>
+                  <div className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</div>
+                  <div className="text-gray-600 text-xl">{stat.label}</div>
                 </div>
               );
             })}

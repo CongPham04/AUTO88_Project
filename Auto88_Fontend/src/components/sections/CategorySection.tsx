@@ -44,8 +44,8 @@ export default function CategorySection({ onCategoryClick }: CategorySectionProp
             </>
           ) : (
             <>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Danh mục xe ô tô</h2>
-              <p className="text-gray-600 mb-4">
+              <h2 className="text-4xl font-bold text-gray-900 mb-2">Danh mục xe ô tô</h2>
+              <p className="text-gray-600 mb-4 text-xl">
                 Khám phá bộ sưu tập xe đa dạng từ các thương hiệu hàng đầu thế giới
               </p>
             </>
@@ -80,7 +80,7 @@ export default function CategorySection({ onCategoryClick }: CategorySectionProp
                     </div>
                   )}
                   <div className="flex flex-col items-start">
-                    <span className="font-semibold text-gray-900 uppercase tracking-widest">
+                    <span className="font-semibold text-gray-900 uppercase tracking-widest text-lg">
                       {category}
                     </span>
                     <span className="text-xs text-red-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity">

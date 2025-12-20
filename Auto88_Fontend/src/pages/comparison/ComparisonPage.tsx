@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 // Skeleton cho bảng so sánh
 const ComparisonSkeleton = () => (
-  <div className="animate-pulse">
+  <div className="animate-pulse ">
     <div className="text-center mb-8">
       <Skeleton className="h-9 w-1/3 mx-auto mb-2" />
       <Skeleton className="h-5 w-1/4 mx-auto" />
@@ -178,9 +178,9 @@ export default function ComparisonPage() {
 
   if (compareList.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 mt-2 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-1 text-l text-gray-500 hover:text-gray-900 cursor-pointer w-fit transition-colors mb-3" onClick={() => navigate('/cars')}>
+          <div className="flex items-center gap-1 text-l text-gray-500 hover:text-gray-900 cursor-pointer w-fit transition-colors mb-6 text-xl hover:text-red-700" onClick={() => navigate('/cars')}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Quay lại danh sách xe
           </div>
@@ -197,9 +197,9 @@ export default function ComparisonPage() {
 
   if (compareList.length === 1) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-1 text-l text-gray-500 hover:text-gray-900 cursor-pointer w-fit transition-colors mb-3" onClick={() => navigate('/cars')}>
+      <div className="min-h-screen bg-gray-50 mt-2 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"> 
+          <div className="flex items-center gap-1 text-l text-gray-500 hover:text-gray-900 cursor-pointer w-fit transition-colors mb-6 text-xl hover:text-red-700" onClick={() => navigate('/cars')}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Quay lại danh sách xe
           </div>
@@ -218,9 +218,9 @@ export default function ComparisonPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-1 text-l text-gray-500 hover:text-gray-900 cursor-pointer w-fit transition-colors mb-3" onClick={() => navigate('/cars')}>
+    <div className="min-h-screen bg-gray-50 mt-2 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
+        <div className="flex items-center gap-1 text-l text-gray-500 hover:text-gray-900 cursor-pointer w-fit transition-colors mb-6 text-xl hover:text-red-700" onClick={() => navigate('/cars')}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Quay lại danh sách xe
           </div>

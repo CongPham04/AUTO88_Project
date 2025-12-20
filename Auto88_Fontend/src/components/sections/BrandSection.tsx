@@ -47,8 +47,8 @@ export default function BrandSection({ onBrandClick }: BrandSectionProps) {
             </>
           ) : (
             <>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Thương hiệu nổi bật</h2>
-              <p className="text-gray-600 mb-4">
+              <h2 className="text-4xl font-bold text-gray-900 mb-2">Thương hiệu nổi bật</h2>
+              <p className="text-gray-600 mb-4 text-xl">
                 Xe chính hãng từ các thương hiệu uy tín được ưa chuộng nhất
               </p>
             </>
@@ -81,10 +81,10 @@ export default function BrandSection({ onBrandClick }: BrandSectionProps) {
                     <ImageWithFallback
                       src={logo}
                       alt={brand}
-                      className="w-10 h-10 object-contain bg-white rounded"
+                      className="w-16 h-16 object-contain bg-white rounded"
                     />
                   )}
-                  <span className="font-semibold">{brand}</span>
+                  <span className="font-semibold text-lg">{brand}</span>
                 </Button>
               );
             })

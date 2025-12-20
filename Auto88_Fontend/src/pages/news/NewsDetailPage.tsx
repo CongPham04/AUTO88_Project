@@ -78,12 +78,12 @@ export default function NewsDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 mt-2 py-6">
       {/* Container chính rộng để chứa nút quay lại */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Nút quay lại nằm thẳng hàng bên trái */}
-        <div onClick={() => navigate('/news')} className="flex items-center gap-1 text-l text-gray-500 hover:text-gray-900 cursor-pointer w-fit transition-colors mb-6">
+        <div onClick={() => navigate('/news')} className="flex items-center gap-1 text-l text-gray-500 hover:text-gray-900 cursor-pointer w-fit transition-colors mb-6 text-xl hover:text-red-700">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Quay lại danh sách tin tức
         </div>

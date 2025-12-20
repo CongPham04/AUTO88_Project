@@ -111,14 +111,14 @@ export default function Header() {
 
           <div className="flex items-center space-x-3">
             {/* Compare Button */}
-            <Button variant="ghost" size="sm" onClick={() => navigate('/comparison')} className="relative cursor-pointer hover:bg-gray-100 transition-colors px-2 sm:px-4">
-              <GitCompare className="w-5 h-5" />
+            <Button variant="ghost" size="sm" onClick={() => navigate('/comparison')} className=" text-lg relative cursor-pointer text-gray-700 hover:text-red-600 hover:bg-gray-50 transition-colors px-2 sm:px-4">
+              <GitCompare className="w-4 h-4" />
               {compareCount > 0 && (
                 <Badge variant="destructive" className="absolute -top-2 -right-2 w-5 h-5 p-0 flex items-center justify-center text-xs">
                   {compareCount}
                 </Badge>
               )}
-              <span className="hidden lg:inline ml-2">So sánh</span>
+              So sánh
             </Button>
 
             {/* User Menu Area */}

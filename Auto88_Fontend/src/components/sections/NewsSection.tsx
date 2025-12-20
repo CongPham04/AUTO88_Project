@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
-import { Skeleton } from '@/components/ui/skeleton'; 
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface News {
   id: number;
@@ -17,7 +17,7 @@ interface News {
 interface NewsSectionProps {
   news: News[];
   onReadMore: (newsId: number) => void;
-  isLoading: boolean; 
+  isLoading: boolean;
 }
 
 const SkeletonNewsCard = () => (
@@ -49,12 +49,12 @@ export default function NewsSection({ news, onReadMore, isLoading }: NewsSection
             </>
           ) : (
             <>
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Tin tức & Khuyến mãi</h2>
-              <p className="text-gray-600 max-w-2xl mx-auto">Cập nhật những tin tức mới nhất về ô tô và các chương trình ưu đãi hấp dẫn</p>
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">Tin tức & Khuyến mãi</h2>
+              <p className="text-gray-600 text-xl">Cập nhật những tin tức mới nhất về ô tô và các chương trình ưu đãi hấp dẫn!</p>
             </>
           )}
         </div>
-        
+
         {/* [SỬA LỖI] Bắt đầu logic 3 trạng thái TỪ ĐÂY */}
 
         {isLoading ? (
@@ -67,7 +67,11 @@ export default function NewsSection({ news, onReadMore, isLoading }: NewsSection
           // 2. Trạng thái có Data: Hiển thị grid với news
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 min-h-96">
             {news.map((article) => (
-              <Card key={article.id} className="group hover:shadow-lg transition-all duration-300">
+              <Card
+                key={article.id}
+                className="group hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col h-full"
+                onClick={() => onReadMore(article.id)}
+              >
                 <CardContent className="p-0">
                   <div className="relative overflow-hidden rounded-t-lg">
                     <ImageWithFallback src={article.image} alt={article.title} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -82,7 +86,7 @@ export default function NewsSection({ news, onReadMore, isLoading }: NewsSection
                     </div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-red-600 transition-colors">{article.title}</h3>
                     <p className="text-gray-600 mb-4 line-clamp-3">{article.summary}</p>
-                    <Button variant="ghost" className="p-0 h-auto text-red-600 hover:text-red-700" onClick={() => onReadMore(article.id)}>
+                    <Button variant="ghost" className="p-0 h-auto hover:bg-red-600 text-gray-600 hover:text-red-700" onClick={() => onReadMore(article.id)}>
                       Đọc thêm
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>

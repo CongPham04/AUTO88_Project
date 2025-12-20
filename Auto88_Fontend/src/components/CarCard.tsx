@@ -58,7 +58,7 @@ export function CarCard({ car, onViewDetails, onAddToCompare, isInCompareList = 
               {car.detail && <span className="bg-gray-100 px-2 py-1 rounded">{car.detail.transmission}</span>}
               {/* ✅ THÊM SỐ LƯỢNG ĐÃ BÁN (LIST VIEW) */}
               <span className="bg-orange-50 text-orange-700 px-2 py-1 rounded border border-orange-100 flex items-center gap-1">
-                <TrendingUp size={12} /> Đã bán: {car.soldQuantity}
+                <TrendingUp size={16} /> Đã bán: <span className="font-semibold text-red-600">{car.soldQuantity}</span>
               </span>
             </div>
 
@@ -68,7 +68,7 @@ export function CarCard({ car, onViewDetails, onAddToCompare, isInCompareList = 
           </div>
 
           <div className="flex gap-3 mt-6 pt-4 border-t">
-            <Button onClick={() => onViewDetails(car.carId)} className="flex-1 bg-black text-white hover:bg-gray-800">
+            <Button onClick={() => onViewDetails(car.carId)} className="flex-1 bg-black text-white hover:bg-gray-800 hover:text-red-600">
               Xem chi tiết
             </Button>
             <Button variant="outline" size="icon" onClick={() => onAddToCompare(car.carId)} className={isInCompareList ? "text-blue-600 border-blue-600 bg-blue-50" : ""}>
@@ -82,7 +82,7 @@ export function CarCard({ car, onViewDetails, onAddToCompare, isInCompareList = 
 
   // Grid View (Mặc định)
   return (
-    <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-none bg-white h-full flex flex-col">
+    <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 border-none bg-white h-full flex flex-col">
       <div className="relative aspect-[4/3] overflow-hidden">
         <ImageWithFallback
           src={displayImage}
@@ -104,23 +104,23 @@ export function CarCard({ car, onViewDetails, onAddToCompare, isInCompareList = 
 
       <CardContent className="p-4 flex-1 flex flex-col">
         <div className="mb-2 flex justify-between items-start">
-          <span className="text-xs font-bold text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded">{car.brand}</span>
-          <span className="text-xs text-gray-500">{car.manufactureYear}</span>
+          <span className="text-sm font-bold text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded">{car.brand}</span>
+          <span className="text-sm text-gray-500">{car.manufactureYear}</span>
         </div>
 
-        <h3 className="font-bold text-gray-900 text-lg mb-1 truncate" title={car.model}>{car.model}</h3>
+        <h3 className="font-bold  text-gray-900 text-xl mb-1 truncate" title={car.model}>{car.model}</h3>
 
-        <div className="flex items-center gap-1 text-xs text-gray-500 mb-3">
-            <TrendingUp size={12} className="text-orange-500" />
-            <span>Đã bán: <span className="font-medium text-gray-700">{car.soldQuantity}</span></span>
+        <div className="flex items-center gap-1 text-sm text-gray-500 mb-3">
+            <TrendingUp size={16} className="text-orange-500" />
+            <span>Đã bán: <span className="font-semibold text-red-600">{car.soldQuantity}</span></span>
         </div>
 
         <div className="mt-auto pt-3 flex items-center justify-between border-t border-gray-100">
           <div className="flex flex-col">
-            <span className="text-xs text-gray-400 font-medium">Giá bán</span>
-            <span className="text-red-600 font-bold text-lg">{formatPrice(car.price)}</span>
+            <span className="text-sm text-gray-400 font-medium">Giá bán</span>
+            <span className="text-red-600 font-bold text-xl">{formatPrice(car.price)}</span>
           </div>
-          <Button variant="ghost" size="sm" className="text-xs hover:bg-gray-100" onClick={() => onViewDetails(car.carId)}>
+          <Button variant="ghost" size="sm" className="text-sm hover:bg-red-600 hover:text-red-600" onClick={() => onViewDetails(car.carId)}>
             Chi tiết <ArrowRight className="w-3 h-3 ml-1" />
           </Button>
         </div>

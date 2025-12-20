@@ -73,7 +73,7 @@ const NewsPageSkeleton = () => (
 export default function NewsPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   const [news, setNews] = useState<NewsResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -143,21 +143,21 @@ export default function NewsPage() {
     return news.filter((article) => {
       // Vì BE chưa có category, ta giả lập logic filter category dựa trên slug/title nếu cần
       // Hoặc chỉ cần filter theo searchTerm là đủ
-      const categoryMatch = selectedCategory === 'all' || 
-                            article.slug.includes(selectedCategory.toLowerCase()) || // Giả lập
-                            true; // Tạm thời cho qua nếu không có logic category
-      
+      const categoryMatch = selectedCategory === 'all' ||
+        article.slug.includes(selectedCategory.toLowerCase()) || // Giả lập
+        true; // Tạm thời cho qua nếu không có logic category
+
       const searchMatch = searchTerm === '' ||
         article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         article.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
-        
+
       return categoryMatch && searchMatch;
     });
   }, [news, searchTerm, selectedCategory]);
 
   const featuredArticle = useMemo(() => filteredNews[0] || null, [filteredNews]);
   const remainingArticles = useMemo(() => filteredNews.slice(1), [filteredNews]);
-  
+
   const totalPages = useMemo(() => Math.ceil(remainingArticles.length / NEWS_PER_PAGE), [remainingArticles]);
 
   const paginatedArticles = useMemo(() => {
@@ -167,20 +167,20 @@ export default function NewsPage() {
   }, [remainingArticles, currentPage]);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6">
+    <div className="min-h-screen bg-gray-50 py-6 mt-2 py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {loading ? (
           <NewsPageSkeleton />
         ) : error ? (
           <div className="min-h-[60vh] flex flex-col items-center justify-center text-center py-12">
-             <p className="text-lg text-red-600 mb-4">{error}</p>
-             <Button onClick={() => window.location.reload()} variant="outline">Tải lại trang</Button>
+            <p className="text-lg text-red-600 mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()} variant="outline">Tải lại trang</Button>
           </div>
         ) : (
           <>
             <div className="text-center mb-12">
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">Tin tức & Khuyến mãi</h1>
-              <p className="text-gray-600 max-w-2xl mx-auto">
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">Tin tức & Khuyến mãi</h1>
+              <p className="text-gray-600 text-xl">
                 Những tin tức mới nhất về thị trường ô tô và các chương trình ưu đãi hấp dẫn từ Auto 88
               </p>
             </div>
@@ -202,8 +202,9 @@ export default function NewsPage() {
             {featuredArticle ? (
               <>
                 {/* Featured Article (Style cũ: Card có viền, shadow) */}
-                <Card 
-                  className="mb-8 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                <Card
+                  key={featuredArticle.newsId}
+                  className="group hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col h-full"
                   onClick={() => navigate(`/news/${featuredArticle.newsId}`)}
                 >
                   <div className="grid grid-cols-1 lg:grid-cols-2">
@@ -216,19 +217,19 @@ export default function NewsPage() {
                     </div>
                     <div className="p-8 flex flex-col justify-center">
                       <div className="flex items-center space-x-4 mb-4">
-                         <Badge variant="destructive">Nổi bật</Badge>
-                         <div className="flex items-center text-gray-600 text-sm">
+                        <Badge variant="destructive">Nổi bật</Badge>
+                        <div className="flex items-center text-gray-600 text-sm">
                           <Calendar className="w-4 h-4 mr-2" />
                           {formatDate(featuredArticle.publishedAt || featuredArticle.createdAt)}
                         </div>
                       </div>
-                      <h2 className="text-2xl font-bold text-gray-900 mb-4 hover:text-red-600 transition-colors">
+                      <h2 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-red-600 transition-colors line-clamp-2">
                         {featuredArticle.title}
                       </h2>
                       <p className="text-gray-600 mb-6 line-clamp-3">
                         {featuredArticle.excerpt}
                       </p>
-                      <Button variant="outline" className="w-fit" onClick={(e) => { e.stopPropagation(); navigate(`/news/${featuredArticle.newsId}`) }}>
+                      <Button variant="ghost" className="w-fit p-0 h-auto hover:bg-red-600 text-gray-600 hover:text-red-700" onClick={(e) => { e.stopPropagation(); navigate(`/news/${featuredArticle.newsId}`) }}>
                         Đọc thêm <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
                     </div>
@@ -237,51 +238,51 @@ export default function NewsPage() {
 
                 {/* News Grid (Style cũ: Card có viền, shadow) */}
                 {paginatedArticles.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
                     {paginatedArticles.map((article) => (
                       <Card
                         key={article.newsId}
                         className="group hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col h-full"
                         onClick={() => navigate(`/news/${article.newsId}`)}
                       >
-                         <CardContent className="p-0 flex flex-col flex-1">
-                            <div className="relative overflow-hidden rounded-t-lg aspect-[16/10]">
-                              <ImageWithFallback
-                                src={article.coverImageUrl}
-                                alt={article.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                              <div className="absolute top-4 left-4">
-                                <Badge variant="secondary">Tin tức</Badge>
-                              </div>
+                        <CardContent className="p-0 flex flex-col flex-1">
+                          <div className="relative overflow-hidden rounded-t-lg aspect-[16/10]">
+                            <ImageWithFallback
+                              src={article.coverImageUrl}
+                              alt={article.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute top-4 left-4">
+                              <Badge variant="secondary">Tin tức</Badge>
+                            </div>
+                          </div>
+
+                          <div className="p-6 flex flex-col flex-1">
+                            <div className="flex items-center text-sm text-gray-500 mb-3">
+                              <Calendar className="w-4 h-4 mr-2" />
+                              {formatDate(article.publishedAt || article.createdAt)}
                             </div>
 
-                            <div className="p-6 flex flex-col flex-1">
-                              <div className="flex items-center text-sm text-gray-500 mb-3">
-                                <Calendar className="w-4 h-4 mr-2" />
-                                {formatDate(article.publishedAt || article.createdAt)}
-                              </div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-3 group-hover:text-red-600 transition-colors line-clamp-2">
+                              {article.title}
+                            </h3>
 
-                              <h3 className="text-lg font-semibold text-gray-900 mb-3 group-hover:text-red-600 transition-colors line-clamp-2">
-                                {article.title}
-                              </h3>
+                            <p className="text-gray-600 mb-4 line-clamp-3 flex-1 text-sm">
+                              {article.excerpt}
+                            </p>
 
-                              <p className="text-gray-600 mb-4 line-clamp-3 flex-1 text-sm">
-                                {article.excerpt}
-                              </p>
-
-                              <div className="flex items-center text-red-600 font-medium mt-auto group-hover:translate-x-2 transition-transform duration-300">
-                                Đọc tiếp <ArrowRight className="w-4 h-4 ml-1" />
-                              </div>
+                            <div className="flex items-center text-gray-600 hover:text-red-700 font-medium mt-auto group-hover:translate-x-2 transition-transform duration-300">
+                              Đọc thêm <ArrowRight className="w-4 h-4 ml-2" />
                             </div>
+                          </div>
                         </CardContent>
                       </Card>
                     ))}
                   </div>
                 ) : (
-                    <div className="text-center py-12 text-gray-500">Không tìm thấy bài viết nào khác.</div>
+                  <div className="text-center py-12 text-gray-500">Không tìm thấy bài viết nào khác.</div>
                 )}
-                
+
                 {/* Pagination (Giữ nguyên logic) */}
                 {totalPages > 1 && (
                   <div className="mt-16 flex justify-center" style={{ marginTop: '2rem' }} /* 6rem = 96px */>
