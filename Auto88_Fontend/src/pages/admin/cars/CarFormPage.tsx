@@ -177,7 +177,7 @@ export default function CarFormPage({ mode }: CarFormPageProps) {
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Mô tả</Label>
-                                    <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} rows={3} />
+                                    <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} rows={3} placeholder='VD: Xe Toyota Vios 1.5E MT (Máy xăng) chính chủ.' />
                                 </div>
                             </CardContent>
                         </Card>
@@ -188,19 +188,19 @@ export default function CarFormPage({ mode }: CarFormPageProps) {
                                 <div className="grid grid-cols-3 gap-4">
                                     <div className="space-y-2">
                                         <Label>Động cơ</Label>
-                                        <Input value={formData.detail.engine} onChange={e => setFormData({...formData, detail: {...formData.detail, engine: e.target.value}})} />
+                                        <Input value={formData.detail.engine} onChange={e => setFormData({...formData, detail: {...formData.detail, engine: e.target.value}})} placeholder='VD: 2NR-FE 1.5L'/>
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Hộp số</Label>
-                                        <Input value={formData.detail.transmission} onChange={e => setFormData({...formData, detail: {...formData.detail, transmission: e.target.value}})} />
+                                        <Input value={formData.detail.transmission} onChange={e => setFormData({...formData, detail: {...formData.detail, transmission: e.target.value}})} placeholder='VD: Số sàn 5 cấp'/>
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Nhiên liệu</Label>
-                                        <Input value={formData.detail.fuelType} onChange={e => setFormData({...formData, detail: {...formData.detail, fuelType: e.target.value}})} />
+                                        <Input value={formData.detail.fuelType} onChange={e => setFormData({...formData, detail: {...formData.detail, fuelType: e.target.value}})} placeholder='VD: Xăng'/>
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Công suất (HP)</Label>
-                                        <Input type="number" value={formData.detail.horsepower} onChange={e => setFormData({...formData, detail: {...formData.detail, horsepower: Number(e.target.value)}})} />
+                                        <Input type="number" value={formData.detail.horsepower} onChange={e => setFormData({...formData, detail: {...formData.detail, horsepower: Number(e.target.value)}})}/>
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Momen (Nm)</Label>
